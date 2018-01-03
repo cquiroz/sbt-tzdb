@@ -1,6 +1,7 @@
 package io.gitub.sbt.tzdb
 
-import java.io.File
+import java.io.{File => JFile}
+import better.files._
 import sbt._
 import sbt.util.Logger
 import Keys._
@@ -28,7 +29,7 @@ object TzdbPlugin extends AutoPlugin {
     val yearFilter = settingKey[Int => Boolean]("Filter for years")
     val dbVersion = settingKey[TZDBVersion]("Version of the tzdb")
     val tzdbCodeGen =
-      taskKey[Seq[File]]("Generate scala.js compatible database of tzdb data")
+      taskKey[Seq[JFile]]("Generate scala.js compatible database of tzdb data")
     val downloadFromZip: TaskKey[Unit] =
       taskKey[Unit]("Download the tzdb tarball and extract it")
   }
@@ -52,9 +53,9 @@ object TzdbPlugin extends AutoPlugin {
           val p = for {
             _   <- cats.effect.IO(log.info(s"tzdb data missing. downloading ${tzdbVersion.id} version to $tzdbDir..."))
             _   <- cats.effect.IO(log.info(s"downloading from $url"))
-            _   <- cats.effect.IO(log.info(s"to file $tdbTarball"))
-            dir <- cats.effect.IO(IO.createDirectory(tzdbDir))
-            _   <- IOTasks.download(url, tzdbTarball)
+            _   <- cats.effect.IO(log.info(s"to file $tzdbTarball"))
+            _   <- cats.effect.IO(IO.createDirectory(tzdbDir))
+            _   <- IOTasks.download(url, tzdbTarball.toScala)
             _   <- IOTasks.gunzipTar(tzdbTarball, tzdbDir)
             _   <- cats.effect.IO(tzdbTarball.delete())
           } yield ()
@@ -71,6 +72,7 @@ object TzdbPlugin extends AutoPlugin {
         tzdbCodeGenImpl(
           tzdbData = (resourceManaged in Compile).value / "tzdb",
           tzdbDir = (sourceManaged in Compile).value,
+          srcDir = (resourceDirectory in Compile).value,
           zonesFilter = zonesFilter.value,
           yearFilter = yearFilter.value,
           dbVersion = dbVersion.value,
@@ -79,11 +81,16 @@ object TzdbPlugin extends AutoPlugin {
       },
     )
 
-  def tzdbCodeGenImpl(tzdbDir: File,
-                      tzdbData: File,
+  def tzdbCodeGenImpl(tzdbDir: JFile,
+                      tzdbData: JFile,
+                      srcDir: JFile,
                       zonesFilter: String => Boolean,
                       yearFilter: Int => Boolean,
                       dbVersion: TZDBVersion,
-                      log: Logger): Seq[File] =
-    IOTasks.generateTZDataSources(tzdbDir, tzdbData, log).unsafeRunSync().toSeq.map(_.toJava)
+                      log: Logger): Seq[JFile] =
+  (for {
+    t <- IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "org.threeten.bp.zone", false)
+    j <- IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "java.time.zone", true)
+    f <- IOTasks.generateTZDataSources(tzdbDir, tzdbData, log)
+  } yield ((t :: j :: Nil)  ::: f).map(_.toJava).toSeq).unsafeRunSync
 }
