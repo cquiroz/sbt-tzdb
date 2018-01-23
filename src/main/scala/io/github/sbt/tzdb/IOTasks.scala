@@ -19,9 +19,11 @@ import kuyfi.TZDBCodeGenerator
 import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator._
 
 object IOTasks {
-  def generateTZDataSources(base: JFile, data: JFile, log: Logger, zonesFilter: String => Boolean): IO[List[better.files.File]] = {
+  def generateTZDataSources(base: JFile, data: JFile, log: Logger, includeTTBP: Boolean, zonesFilter: String => Boolean): IO[List[better.files.File]] = {
     val dataPath = base.toPath.resolve("tzdb")
-    val paths = List(("zonedb.threeten", "org.threeten.bp", dataPath.resolve(s"tzdb_threeten.scala")), ("zonedb.java", "java.time", dataPath.resolve(s"tzdb_java.scala")))
+    val pathsJT = ("zonedb.java", "java.time", dataPath.resolve(s"tzdb_java.scala"))
+    val pathsTTB = ("zonedb.threeten", "org.threeten.bp", dataPath.resolve(s"tzdb_threeten.scala"))
+    val paths = if (includeTTBP) List(pathsTTB, pathsJT) else List(pathsJT)
     for {
       _ <- IO(log.info(s"Generating tzdb from db at $data to $base"))
       _ <- IO(paths.foreach(_._3.getParent.toFile.mkdirs()))
@@ -54,8 +56,6 @@ object IOTasks {
       //do something
       Files.copy(stream, tempFile.path, StandardCopyOption.REPLACE_EXISTING)
       val replaced = tempFile.lines.map(if (isJava) replacementsJava else replacements)
-      println("replace")
-      replaced.foreach(println)
       destinationFile.printLines(replaced)
     }
     destinationFile

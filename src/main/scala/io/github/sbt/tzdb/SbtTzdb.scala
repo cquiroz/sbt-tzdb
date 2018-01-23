@@ -5,6 +5,8 @@ import better.files._
 import sbt._
 import sbt.util.Logger
 import Keys._
+import cats._
+import cats.implicits._
 
 object TzdbPlugin extends AutoPlugin {
   sealed trait TZDBVersion {
@@ -31,13 +33,16 @@ object TzdbPlugin extends AutoPlugin {
       taskKey[Seq[JFile]]("Generate scala.js compatible database of tzdb data")
     val downloadFromZip: TaskKey[Unit] =
       taskKey[Unit]("Download the tzdb tarball and extract it")
+    val includeTTBP: TaskKey[Boolean] =
+      taskKey[Boolean]("Include also a provider for threeten bp")
   }
 
   import autoImport._
   override def trigger = noTrigger
   override lazy val buildSettings = Seq(
     zonesFilter := { case _ => true },
-    dbVersion := LatestVersion
+    dbVersion := LatestVersion,
+    includeTTBP := false
   )
   override val projectSettings =
     Seq(
@@ -73,6 +78,7 @@ object TzdbPlugin extends AutoPlugin {
           srcDir = (resourceDirectory in Compile).value,
           zonesFilter = zonesFilter.value,
           dbVersion = dbVersion.value,
+          includeTTBP = includeTTBP.value,
           log = streams.value.log
         )
       },
@@ -83,10 +89,14 @@ object TzdbPlugin extends AutoPlugin {
                       srcDir: JFile,
                       zonesFilter: String => Boolean,
                       dbVersion: TZDBVersion,
-                      log: Logger): Seq[JFile] =
-  (for {
-    t <- IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "org.threeten.bp.zone", false)
-    j <- IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "java.time.zone", true)
-    f <- IOTasks.generateTZDataSources(tzdbDir, tzdbData, log, zonesFilter)
-  } yield ((t :: j :: Nil)  ::: f).map(_.toJava).toSeq).unsafeRunSync
+                      includeTTBP: Boolean,
+                      log: Logger): Seq[JFile] = {
+    val ttbp = IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "org.threeten.bp.zone", false)
+    val jt = IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "java.time.zone", true)
+    val providerCopy = if (includeTTBP) List(ttbp, jt) else List(jt)
+    (for {
+      j <- providerCopy.sequence
+      f <- IOTasks.generateTZDataSources(tzdbDir, tzdbData, log, includeTTBP, zonesFilter)
+    } yield (j ::: f).map(_.toJava).toSeq).unsafeRunSync
+  }
 }
