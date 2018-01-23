@@ -19,13 +19,13 @@ import kuyfi.TZDBCodeGenerator
 import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator._
 
 object IOTasks {
-  def generateTZDataSources(base: JFile, data: JFile, log: Logger): IO[List[better.files.File]] = {
+  def generateTZDataSources(base: JFile, data: JFile, log: Logger, zonesFilter: String => Boolean): IO[List[better.files.File]] = {
     val dataPath = base.toPath.resolve("tzdb")
     val paths = List(("zonedb.threeten", "org.threeten.bp", dataPath.resolve(s"tzdb_threeten.scala")), ("zonedb.java", "java.time", dataPath.resolve(s"tzdb_java.scala")))
     for {
       _ <- IO(log.info(s"Generating tzdb from db at $data to $base"))
       _ <- IO(paths.foreach(_._3.getParent.toFile.mkdirs()))
-      f <- paths.map(p => TZDBCodeGenerator.exportAll(data, p._3.toFile, p._1, p._2)).sequence
+      f <- paths.map(p => TZDBCodeGenerator.exportAll(data, p._3.toFile, p._1, p._2, zonesFilter)).sequence
     } yield f
   }
 

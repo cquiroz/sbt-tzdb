@@ -26,7 +26,6 @@ object TzdbPlugin extends AutoPlugin {
      * Settings
      */
     val zonesFilter = settingKey[String => Boolean]("Filter for zones")
-    val yearFilter = settingKey[Int => Boolean]("Filter for years")
     val dbVersion = settingKey[TZDBVersion]("Version of the tzdb")
     val tzdbCodeGen =
       taskKey[Seq[JFile]]("Generate scala.js compatible database of tzdb data")
@@ -38,7 +37,6 @@ object TzdbPlugin extends AutoPlugin {
   override def trigger = noTrigger
   override lazy val buildSettings = Seq(
     zonesFilter := { case _ => true },
-    yearFilter := { _ => true },
     dbVersion := LatestVersion
   )
   override val projectSettings =
@@ -74,7 +72,6 @@ object TzdbPlugin extends AutoPlugin {
           tzdbDir = (sourceManaged in Compile).value,
           srcDir = (resourceDirectory in Compile).value,
           zonesFilter = zonesFilter.value,
-          yearFilter = yearFilter.value,
           dbVersion = dbVersion.value,
           log = streams.value.log
         )
@@ -85,12 +82,11 @@ object TzdbPlugin extends AutoPlugin {
                       tzdbData: JFile,
                       srcDir: JFile,
                       zonesFilter: String => Boolean,
-                      yearFilter: Int => Boolean,
                       dbVersion: TZDBVersion,
                       log: Logger): Seq[JFile] =
   (for {
     t <- IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "org.threeten.bp.zone", false)
     j <- IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "java.time.zone", true)
-    f <- IOTasks.generateTZDataSources(tzdbDir, tzdbData, log)
+    f <- IOTasks.generateTZDataSources(tzdbDir, tzdbData, log, zonesFilter)
   } yield ((t :: j :: Nil)  ::: f).map(_.toJava).toSeq).unsafeRunSync
 }
