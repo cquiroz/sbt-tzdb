@@ -7,6 +7,7 @@ import sbt.util.Logger
 import Keys._
 import cats._
 import cats.implicits._
+import cats.effect
 
 object TzdbPlugin extends AutoPlugin {
   sealed trait TZDBVersion {
@@ -64,7 +65,7 @@ object TzdbPlugin extends AutoPlugin {
           } yield ()
           p.unsafeRunSync()
         } else {
-          log.info("tzdb files already available")
+          log.debug("tzdb files already available")
         }
       },
       compile in Compile := (compile in Compile).dependsOn(downloadFromZip).value,
@@ -95,8 +96,9 @@ object TzdbPlugin extends AutoPlugin {
     val jt = IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "java.time.zone", true)
     val providerCopy = if (includeTTBP) List(ttbp, jt) else List(jt)
     (for {
-      j <- providerCopy.sequence
-      f <- IOTasks.generateTZDataSources(tzdbDir, tzdbData, log, includeTTBP, zonesFilter)
+      r <- IOTasks.providerPresent(tzdbDir, "TzdbZoneRulesProvider.scala", "java.time.zone")
+      j <- if (r) effect.IO(Nil) else providerCopy.sequence
+      f <- if (r) effect.IO(Nil) else IOTasks.generateTZDataSources(tzdbDir, tzdbData, log, includeTTBP, zonesFilter)
     } yield (j ::: f).map(_.toJava).toSeq).unsafeRunSync
   }
 }

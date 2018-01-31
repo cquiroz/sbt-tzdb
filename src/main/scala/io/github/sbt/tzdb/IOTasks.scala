@@ -31,6 +31,14 @@ object IOTasks {
     } yield f
   }
 
+  def providerPresent(base: JFile, name: String, packageDir: String): IO[Boolean] = IO {
+    val pathSeparator = JFile.separator
+    val packagePath = packageDir.replaceAll("\\.", pathSeparator)
+    val destinationPath = base.toScala/packagePath
+    val destinationFile = destinationPath/name
+    destinationFile.exists
+  }
+
   def copyProvider(base: JFile, name: String, packageDir: String, isJava: Boolean): IO[File] = IO {
     def replacements(line: String): String =
       line
