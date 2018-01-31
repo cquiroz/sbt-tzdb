@@ -31,7 +31,7 @@ final class TzdbZoneRulesProvider extends ZoneRulesProvider {
   }
 
   private def toLocalTime(lt: Int): LocalTime =
-    LocalTime.ofSecondOfDay(lt)
+    LocalTime.ofSecondOfDay(lt.toLong)
 
   private def toZoneOffsetTransition(zr: js.Array[Int]): ZoneOffsetTransition = {
     val jointDate = zr(0)
