@@ -41,7 +41,8 @@ lazy val sbt_tzdb = project
       "org.apache.commons"   %  "commons-compress" % "1.12",
       "com.eed3si9n"         %% "gigahorse-okhttp" % "0.3.0",
       "com.github.pathikrit" %% "better-files"     % "3.4.0"
-    )
+    ),
+    addSbtPlugin("org.scala-js"      % "sbt-scalajs"  % "0.6.22")
   )
 
 lazy val pomData =
