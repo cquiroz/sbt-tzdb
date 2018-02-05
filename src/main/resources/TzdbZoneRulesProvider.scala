@@ -68,7 +68,7 @@ final class TzdbZoneRulesProvider extends ZoneRulesProvider {
     stdZonesMap.get(actualRegion).map(toZoneRules).orElse(fixedZonesMap.get(actualRegion).map(i => ZoneRules.of(ZoneOffset.ofTotalSeconds(i)))).map {z =>
         val r = new ZoneMap[String, ZoneRules]
         // FIXME the version should be provided by the db
-        r.put("2017c", z)
+        r.put(version, z)
         r
     }.getOrElse(throw new DateTimeException(s"TimeZone Region $actualRegion unknown"))
   }

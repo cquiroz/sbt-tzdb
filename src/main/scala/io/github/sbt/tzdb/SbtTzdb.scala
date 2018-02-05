@@ -20,7 +20,7 @@ object TzdbPlugin extends AutoPlugin {
     val id: String = "latest"
     val path: String = "tzdata-latest"
   }
-  case class Version(version: String) extends TZDBVersion {
+  final case class Version(version: String) extends TZDBVersion {
     val id: String = version
     val path: String = s"releases/tzdata$version"
   }
