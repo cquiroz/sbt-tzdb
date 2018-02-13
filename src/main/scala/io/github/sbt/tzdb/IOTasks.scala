@@ -9,7 +9,14 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import better.files._
 import better.files.Dsl._
-import java.io.{InputStream, BufferedInputStream, BufferedOutputStream, FileOutputStream, FileInputStream, File => JFile}
+import java.io.{
+  InputStream,
+  BufferedInputStream,
+  BufferedOutputStream,
+  FileOutputStream,
+  FileInputStream,
+  File => JFile
+}
 import java.nio.file.{Files, StandardCopyOption}
 import cats._
 import cats.implicits._
@@ -19,27 +26,45 @@ import kuyfi.TZDBCodeGenerator
 import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator._
 
 object IOTasks {
-  def generateTZDataSources(base: JFile, data: JFile, log: Logger, includeTTBP: Boolean, zonesFilter: String => Boolean): IO[List[better.files.File]] = {
+  def generateTZDataSources(
+      base: JFile,
+      data: JFile,
+      log: Logger,
+      includeTTBP: Boolean,
+      zonesFilter: String => Boolean): IO[List[better.files.File]] = {
     val dataPath = base.toPath.resolve("tzdb")
-    val pathsJT = ("zonedb.java", "java.time", dataPath.resolve(s"tzdb_java.scala"))
-    val pathsTTB = ("zonedb.threeten", "org.threeten.bp", dataPath.resolve(s"tzdb_threeten.scala"))
+    val pathsJT =
+      ("zonedb.java", "java.time", dataPath.resolve(s"tzdb_java.scala"))
+    val pathsTTB = ("zonedb.threeten",
+                    "org.threeten.bp",
+                    dataPath.resolve(s"tzdb_threeten.scala"))
     val paths = if (includeTTBP) List(pathsTTB, pathsJT) else List(pathsJT)
     for {
       _ <- IO(log.info(s"Generating tzdb from db at $data to $base"))
       _ <- IO(paths.foreach(_._3.getParent.toFile.mkdirs()))
-      f <- paths.map(p => TZDBCodeGenerator.exportAll(data, p._3.toFile, p._1, p._2, zonesFilter)).sequence
+      f <- paths
+        .map(
+          p =>
+            TZDBCodeGenerator
+              .exportAll(data, p._3.toFile, p._1, p._2, zonesFilter))
+        .sequence
     } yield f
   }
 
-  def providerPresent(base: JFile, name: String, packageDir: String): IO[Boolean] = IO {
+  def providerPresent(base: JFile,
+                      name: String,
+                      packageDir: String): IO[Boolean] = IO {
     val pathSeparator = JFile.separator
     val packagePath = packageDir.replaceAll("\\.", pathSeparator)
-    val destinationPath = base.toScala/packagePath
-    val destinationFile = destinationPath/name
+    val destinationPath = base.toScala / packagePath
+    val destinationFile = destinationPath / name
     destinationFile.exists
   }
 
-  def copyProvider(base: JFile, name: String, packageDir: String, isJava: Boolean): IO[File] = IO {
+  def copyProvider(base: JFile,
+                   name: String,
+                   packageDir: String,
+                   isJava: Boolean): IO[File] = IO {
     def replacements(line: String): String =
       line
         .replaceAll("package", s"package $packageDir")
@@ -49,21 +74,23 @@ object IOTasks {
         .replaceAll("package", s"package $packageDir")
         .replaceAll("package org.threeten$", "package java")
         .replaceAll("package object bp", "package object time")
-        .replaceAll("""import org.threeten.bp(\..*)?(\.[A-Z_{][^\.]*)""", "import java.time$1$2")
+        .replaceAll("""import org.threeten.bp(\..*)?(\.[A-Z_{][^\.]*)""",
+                    "import java.time$1$2")
         .replaceAll("import zonedb.threeten", "import zonedb.java")
         .replaceAll("private\\s*\\[bp\\]", "private[time]")
 
     val pathSeparator = JFile.separator
     val packagePath = packageDir.replaceAll("\\.", pathSeparator)
     val stream: InputStream = getClass.getResourceAsStream("/" + name)
-    val destinationPath = base.toScala/packagePath
+    val destinationPath = base.toScala / packagePath
     mkdirs(destinationPath)
-    val destinationFile = destinationPath/name
+    val destinationFile = destinationPath / name
     rm(destinationFile)
-    File.usingTemporaryFile() {tempFile =>
+    File.usingTemporaryFile() { tempFile =>
       //do something
       Files.copy(stream, tempFile.path, StandardCopyOption.REPLACE_EXISTING)
-      val replaced = tempFile.lines.map(if (isJava) replacementsJava else replacements)
+      val replaced =
+        tempFile.lines.map(if (isJava) replacementsJava else replacements)
       destinationFile.printLines(replaced)
     }
     destinationFile
@@ -73,10 +100,10 @@ object IOTasks {
     import gigahorse._, support.okhttp.Gigahorse
     import scala.concurrent._, duration._
     Gigahorse.withHttp(Gigahorse.config) { http =>
-       val r = Gigahorse.url(url)
-       val f = http.download(r, to.toJava)
-       Await.result(f, 120.seconds)
-     }
+      val r = Gigahorse.url(url)
+      val f = http.download(r, to.toJava)
+      Await.result(f, 120.seconds)
+    }
   }
 
   def gunzipTar(tarFile: JFile, dest: JFile): IO[String] = IO {
@@ -107,8 +134,8 @@ object IOTasks {
         var bout = new BufferedOutputStream(new FileOutputStream(file))
         var len = 0
         len = tarIn.read(btoRead)
-        while(len != -1) {
-          bout.write(btoRead,0,len)
+        while (len != -1) {
+          bout.write(btoRead, 0, len)
           len = tarIn.read(btoRead)
         }
         bout.close()

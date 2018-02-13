@@ -55,15 +55,17 @@ object TzdbPlugin extends AutoPlugin {
           val tzdbTarball = (resourceManaged in Compile).value / "tzdb.tar.gz"
           val tzdbVersion = dbVersion.value
           if (java.nio.file.Files.notExists(tzdbDir.toPath)) {
-            var url = s"http://www.iana.org/time-zones/repository/${tzdbVersion.path}.tar.gz"
+            var url =
+              s"http://www.iana.org/time-zones/repository/${tzdbVersion.path}.tar.gz"
             val p = for {
-              _   <- cats.effect.IO(log.info(s"tzdb data missing. downloading ${tzdbVersion.id} version to $tzdbDir..."))
-              _   <- cats.effect.IO(log.info(s"downloading from $url"))
-              _   <- cats.effect.IO(log.info(s"to file $tzdbTarball"))
-              _   <- cats.effect.IO(IO.createDirectory(tzdbDir))
-              _   <- IOTasks.download(url, tzdbTarball.toScala)
-              _   <- IOTasks.gunzipTar(tzdbTarball, tzdbDir)
-              _   <- cats.effect.IO(tzdbTarball.delete())
+              _ <- cats.effect.IO(log.info(
+                s"tzdb data missing. downloading ${tzdbVersion.id} version to $tzdbDir..."))
+              _ <- cats.effect.IO(log.info(s"downloading from $url"))
+              _ <- cats.effect.IO(log.info(s"to file $tzdbTarball"))
+              _ <- cats.effect.IO(IO.createDirectory(tzdbDir))
+              _ <- IOTasks.download(url, tzdbTarball.toScala)
+              _ <- IOTasks.gunzipTar(tzdbTarball, tzdbDir)
+              _ <- cats.effect.IO(tzdbTarball.delete())
             } yield ()
             p.unsafeRunSync()
           } else {
@@ -76,14 +78,14 @@ object TzdbPlugin extends AutoPlugin {
       },
       tzdbCodeGen :=
         tzdbCodeGenImpl(
-            tzdbData = (resourceManaged in Compile).value / "tzdb",
-            tzdbDir = (sourceManaged in Compile).value,
-            srcDir = (resourceDirectory in Compile).value,
-            zonesFilter = zonesFilter.value,
-            dbVersion = dbVersion.value,
-            includeTTBP = includeTTBP.value,
-            log = streams.value.log
-          )
+          tzdbData = (resourceManaged in Compile).value / "tzdb",
+          tzdbDir = (sourceManaged in Compile).value,
+          srcDir = (resourceDirectory in Compile).value,
+          zonesFilter = zonesFilter.value,
+          dbVersion = dbVersion.value,
+          includeTTBP = includeTTBP.value,
+          log = streams.value.log
+        )
     )
 
   def tzdbCodeGenImpl(tzdbDir: JFile,
@@ -93,13 +95,27 @@ object TzdbPlugin extends AutoPlugin {
                       dbVersion: TZDBVersion,
                       includeTTBP: Boolean,
                       log: Logger): Seq[JFile] = {
-    val ttbp = IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "org.threeten.bp.zone", false)
-    val jt = IOTasks.copyProvider(tzdbDir, "TzdbZoneRulesProvider.scala", "java.time.zone", true)
+    val ttbp = IOTasks.copyProvider(tzdbDir,
+                                    "TzdbZoneRulesProvider.scala",
+                                    "org.threeten.bp.zone",
+                                    false)
+    val jt = IOTasks.copyProvider(tzdbDir,
+                                  "TzdbZoneRulesProvider.scala",
+                                  "java.time.zone",
+                                  true)
     val providerCopy = if (includeTTBP) List(ttbp, jt) else List(jt)
     (for {
-      r <- IOTasks.providerPresent(tzdbDir, "TzdbZoneRulesProvider.scala", "java.time.zone")
+      r <- IOTasks.providerPresent(tzdbDir,
+                                   "TzdbZoneRulesProvider.scala",
+                                   "java.time.zone")
       j <- if (r) effect.IO(Nil) else providerCopy.sequence
-      f <- if (r) effect.IO(Nil) else IOTasks.generateTZDataSources(tzdbDir, tzdbData, log, includeTTBP, zonesFilter)
+      f <- if (r) effect.IO(Nil)
+      else
+        IOTasks.generateTZDataSources(tzdbDir,
+                                      tzdbData,
+                                      log,
+                                      includeTTBP,
+                                      zonesFilter)
     } yield (j ::: f).map(_.toJava).toSeq).unsafeRunSync
   }
 }
