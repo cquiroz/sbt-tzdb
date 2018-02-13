@@ -9,7 +9,6 @@ import cats._
 import cats.implicits._
 import cats.effect
 import org.scalajs.sbtplugin
-import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport.isScalaJSProject
 
 object TzdbPlugin extends AutoPlugin {
   sealed trait TZDBVersion {
@@ -48,56 +47,44 @@ object TzdbPlugin extends AutoPlugin {
     dbVersion := LatestVersion,
     includeTTBP := false
   )
-  val downloadTask =
-      Def.taskDyn {
-        if (isScalaJSProject.value) {
-          Def.task {
-            val log = streams.value.log
-            val tzdbDir = (resourceManaged in Compile).value / "tzdb"
-            val tzdbTarball = (resourceManaged in Compile).value / "tzdb.tar.gz"
-            val tzdbVersion = dbVersion.value
-            if (java.nio.file.Files.notExists(tzdbDir.toPath)) {
-              var url = s"http://www.iana.org/time-zones/repository/${tzdbVersion.path}.tar.gz"
-              val p = for {
-                _   <- cats.effect.IO(log.info(s"tzdb data missing. downloading ${tzdbVersion.id} version to $tzdbDir..."))
-                _   <- cats.effect.IO(log.info(s"downloading from $url"))
-                _   <- cats.effect.IO(log.info(s"to file $tzdbTarball"))
-                _   <- cats.effect.IO(IO.createDirectory(tzdbDir))
-                _   <- IOTasks.download(url, tzdbTarball.toScala)
-                _   <- IOTasks.gunzipTar(tzdbTarball, tzdbDir)
-                _   <- cats.effect.IO(tzdbTarball.delete())
-              } yield ()
-              p.unsafeRunSync()
-            } else {
-              log.debug("tzdb files already available")
-            }
-          }
-        } else Def.task {}
-      }
   override val projectSettings =
     Seq(
-      downloadFromZip := {
-        downloadTask.value
-      },
+      downloadFromZip :=
+        Def.task {
+          val log = streams.value.log
+          val tzdbDir = (resourceManaged in Compile).value / "tzdb"
+          val tzdbTarball = (resourceManaged in Compile).value / "tzdb.tar.gz"
+          val tzdbVersion = dbVersion.value
+          if (java.nio.file.Files.notExists(tzdbDir.toPath)) {
+            var url = s"http://www.iana.org/time-zones/repository/${tzdbVersion.path}.tar.gz"
+            val p = for {
+              _   <- cats.effect.IO(log.info(s"tzdb data missing. downloading ${tzdbVersion.id} version to $tzdbDir..."))
+              _   <- cats.effect.IO(log.info(s"downloading from $url"))
+              _   <- cats.effect.IO(log.info(s"to file $tzdbTarball"))
+              _   <- cats.effect.IO(IO.createDirectory(tzdbDir))
+              _   <- IOTasks.download(url, tzdbTarball.toScala)
+              _   <- IOTasks.gunzipTar(tzdbTarball, tzdbDir)
+              _   <- cats.effect.IO(tzdbTarball.delete())
+            } yield ()
+            p.unsafeRunSync()
+          } else {
+            log.debug("tzdb files already available")
+          }
+          },
       compile in Compile := (compile in Compile).dependsOn(downloadFromZip).value,
       sourceGenerators in Compile += Def.task {
         tzdbCodeGen.value
       },
-      tzdbCodeGen := Def.taskDyn {
-        if (isScalaJSProject.value) {
-          Def.task {
-            tzdbCodeGenImpl(
-              tzdbData = (resourceManaged in Compile).value / "tzdb",
-              tzdbDir = (sourceManaged in Compile).value,
-              srcDir = (resourceDirectory in Compile).value,
-              zonesFilter = zonesFilter.value,
-              dbVersion = dbVersion.value,
-              includeTTBP = includeTTBP.value,
-              log = streams.value.log
-            )
-          }
-        } else Def.task(Seq.empty[JFile])
-      }.value,
+      tzdbCodeGen :=
+        tzdbCodeGenImpl(
+            tzdbData = (resourceManaged in Compile).value / "tzdb",
+            tzdbDir = (sourceManaged in Compile).value,
+            srcDir = (resourceDirectory in Compile).value,
+            zonesFilter = zonesFilter.value,
+            dbVersion = dbVersion.value,
+            includeTTBP = includeTTBP.value,
+            log = streams.value.log
+          )
     )
 
   def tzdbCodeGenImpl(tzdbDir: JFile,
