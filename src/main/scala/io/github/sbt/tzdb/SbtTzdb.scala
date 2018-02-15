@@ -85,7 +85,6 @@ object TzdbPlugin extends AutoPlugin {
           else
             IOTasks.generateTZDataSources(sourceManaged, tzdbData, log, includeTTBP, zonesFilter)
     } yield (j ::: f).toSeq).unsafeRunSync
-    println(r)
     r.map(_.toJava)
   }
 }
