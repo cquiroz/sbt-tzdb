@@ -26,45 +26,64 @@ import kuyfi.TZDBCodeGenerator
 import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator._
 
 object IOTasks {
-  def generateTZDataSources(
-      base: JFile,
-      data: JFile,
-      log: Logger,
-      includeTTBP: Boolean,
-      zonesFilter: String => Boolean): IO[List[better.files.File]] = {
-    val dataPath = base.toPath.resolve("tzdb")
-    val pathsJT =
-      ("zonedb.java", "java.time", dataPath.resolve(s"tzdb_java.scala"))
-    val pathsTTB = ("zonedb.threeten",
-                    "org.threeten.bp",
-                    dataPath.resolve(s"tzdb_threeten.scala"))
-    val paths = if (includeTTBP) List(pathsTTB, pathsJT) else List(pathsJT)
-    for {
-      _ <- IO(log.info(s"Generating tzdb from db at $data to $base"))
-      _ <- IO(paths.foreach(_._3.getParent.toFile.mkdirs()))
-      f <- paths
-        .map(
-          p =>
-            TZDBCodeGenerator
-              .exportAll(data, p._3.toFile, p._1, p._2, zonesFilter))
-        .sequence
-    } yield f
+  def downloadTZDB(log: Logger,
+                   resourcesDir: JFile,
+                   tzdbVersion: TzdbPlugin.TZDBVersion): IO[Unit] = {
+    val tzdbDir     = resourcesDir.toScala / "tzdb"
+    val tzdbTarball = resourcesDir.toScala / "tzdb.tar.gz"
+    if (!tzdbDir.exists) {
+      var url =
+        s"http://www.iana.org/time-zones/repository/${tzdbVersion.path}.tar.gz"
+      for {
+        _ <- cats.effect.IO(
+              log.info(s"tzdb data missing. downloading ${tzdbVersion.id} version to $tzdbDir..."))
+        _ <- cats.effect.IO(log.info(s"downloading from $url"))
+        _ <- cats.effect.IO(log.info(s"to file $tzdbTarball"))
+        _ <- cats.effect.IO(mkdirs(tzdbDir))
+        _ <- IOTasks.download(url, tzdbTarball)
+        _ <- IOTasks.gunzipTar(tzdbTarball.toJava, tzdbDir.toJava)
+        x <- cats.effect.IO(tzdbTarball.delete())
+      } yield ()
+    } else {
+      cats.effect.IO(log.debug("tzdb files already available"))
+    }
   }
 
-  def providerPresent(base: JFile,
-                      name: String,
-                      packageDir: String): IO[Boolean] = IO {
-    val pathSeparator = JFile.separator
-    val packagePath = packageDir.replaceAll("\\.", pathSeparator)
+  def tzDataSources(base: JFile,
+                    includeTTBP: Boolean): IO[List[(String, String, better.files.File)]] = IO {
+    val dataPath = base.toScala / "tzdb"
+    val pathsJT =
+      ("zonedb.java", "java.time", dataPath / "tzdb_java.scala")
+    val pathsTTB = ("zonedb.threeten", "org.threeten.bp", dataPath / "tzdb_threeten.scala")
+    if (includeTTBP) List(pathsTTB, pathsJT) else List(pathsJT)
+  }
+
+  def generateTZDataSources(base: JFile,
+                            data: JFile,
+                            log: Logger,
+                            includeTTBP: Boolean,
+                            zonesFilter: String => Boolean): IO[List[better.files.File]] =
+    for {
+      paths <- tzDataSources(base, includeTTBP)
+      _     <- IO(log.info(s"Generating tzdb from db at $data to $base"))
+      _     <- IO(paths.foreach(t => mkdirs(t._3.parent)))
+      f <- paths
+            .map(
+              p =>
+                TZDBCodeGenerator
+                  .exportAll(data, p._3.toJava, p._1, p._2, zonesFilter))
+            .sequence
+    } yield f
+
+  def providerFile(base: JFile, name: String, packageDir: String): IO[File] = IO {
+    val pathSeparator   = JFile.separator
+    val packagePath     = packageDir.replaceAll("\\.", pathSeparator)
     val destinationPath = base.toScala / packagePath
     val destinationFile = destinationPath / name
-    destinationFile.exists
+    destinationFile
   }
 
-  def copyProvider(base: JFile,
-                   name: String,
-                   packageDir: String,
-                   isJava: Boolean): IO[File] = IO {
+  def copyProvider(base: JFile, name: String, packageDir: String, isJava: Boolean): IO[File] = IO {
     def replacements(line: String): String =
       line
         .replaceAll("package", s"package $packageDir")
@@ -74,15 +93,14 @@ object IOTasks {
         .replaceAll("package", s"package $packageDir")
         .replaceAll("package org.threeten$", "package java")
         .replaceAll("package object bp", "package object time")
-        .replaceAll("""import org.threeten.bp(\..*)?(\.[A-Z_{][^\.]*)""",
-                    "import java.time$1$2")
+        .replaceAll("""import org.threeten.bp(\..*)?(\.[A-Z_{][^\.]*)""", "import java.time$1$2")
         .replaceAll("import zonedb.threeten", "import zonedb.java")
         .replaceAll("private\\s*\\[bp\\]", "private[time]")
 
-    val pathSeparator = JFile.separator
-    val packagePath = packageDir.replaceAll("\\.", pathSeparator)
+    val pathSeparator       = JFile.separator
+    val packagePath         = packageDir.replaceAll("\\.", pathSeparator)
     val stream: InputStream = getClass.getResourceAsStream("/" + name)
-    val destinationPath = base.toScala / packagePath
+    val destinationPath     = base.toScala / packagePath
     mkdirs(destinationPath)
     val destinationFile = destinationPath / name
     rm(destinationFile)
@@ -131,8 +149,8 @@ object IOTasks {
         file.getParentFile.mkdirs()
         file.createNewFile
         var btoRead = new Array[Byte](1 * 1024)
-        var bout = new BufferedOutputStream(new FileOutputStream(file))
-        var len = 0
+        var bout    = new BufferedOutputStream(new FileOutputStream(file))
+        var len     = 0
         len = tarIn.read(btoRead)
         while (len != -1) {
           bout.write(btoRead, 0, len)
