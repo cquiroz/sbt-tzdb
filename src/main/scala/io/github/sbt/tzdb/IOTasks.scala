@@ -76,8 +76,7 @@ object IOTasks {
     } yield f
 
   def providerFile(base: JFile, name: String, packageDir: String): IO[File] = IO {
-    val pathSeparator   = JFile.separator
-    val packagePath     = packageDir.replaceAll("\\.", pathSeparator)
+    val packagePath     = packageDir.replaceAll("\\.", "/")
     val destinationPath = base.toScala / packagePath
     val destinationFile = destinationPath / name
     destinationFile
@@ -97,8 +96,7 @@ object IOTasks {
         .replaceAll("import zonedb.threeten", "import zonedb.java")
         .replaceAll("private\\s*\\[bp\\]", "private[time]")
 
-    val pathSeparator       = JFile.separator
-    val packagePath         = packageDir.replaceAll("\\.", pathSeparator)
+    val packagePath         = packageDir.replaceAll("\\.", "/")
     val stream: InputStream = getClass.getResourceAsStream("/" + name)
     val destinationPath     = base.toScala / packagePath
     mkdirs(destinationPath)
