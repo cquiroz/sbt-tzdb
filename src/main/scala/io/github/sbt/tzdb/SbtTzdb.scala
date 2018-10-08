@@ -5,8 +5,6 @@ import better.files._
 import sbt._
 import sbt.util.Logger
 import Keys._
-import cats._
-import cats.implicits._
 import cats.effect
 import org.scalajs.sbtplugin
 
@@ -67,6 +65,10 @@ object TzdbPlugin extends AutoPlugin {
                       dbVersion: TZDBVersion,
                       includeTTBP: Boolean,
                       log: Logger): Seq[JFile] = {
+
+    import cats._
+    import cats.implicits._
+    
     val tzdbData: JFile = resourcesManaged / "tzdb"
     val ttbp = IOTasks.copyProvider(sourceManaged,
                                     "TzdbZoneRulesProvider.scala",
