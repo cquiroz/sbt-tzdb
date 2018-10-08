@@ -1,5 +1,9 @@
 # Changes
 
+## 0.2.0
+
+* Update tzdb parser to support the latest tzdb changes
+
 ## 0.1.2
 
 * Improved resilience on generating code
