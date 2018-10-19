@@ -1,5 +1,9 @@
 # Changes
 
+## 0.3.0
+
+* Update tzdb parser to support the latest tzdb changes on 2018f
+
 ## 0.2.0
 
 * Update tzdb parser to support the latest tzdb changes
