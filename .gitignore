@@ -19,8 +19,8 @@
 /*.dic
 /.idea
 *.iml
-.ensime
-.ensime_cache/
+.metals/
+.bloop/
 /project/project/
 /project/target/
 shared/js/src/main/resources/
