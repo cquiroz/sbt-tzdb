@@ -6,7 +6,7 @@ val scalaVer = "2.12.8"
 lazy val commonSettings = Seq(
   name         := "sbt-tzdb",
   description  := "Sbt plugin to build custom timezone databases",
-  version      := "0.3.1",
+  version      := "0.3.2",
   organization := "io.github.cquiroz",
   homepage     := Some(url("https://github.com/cquiroz/sbt-tzdb")),
   licenses     := Seq("BSD 3-Clause License" -> url("https://opensource.org/licenses/BSD-3-Clause")),
@@ -37,10 +37,10 @@ lazy val sbt_tzdb = project
     name := "sbt-tzdb",
     sbtPlugin := true,
     libraryDependencies ++= Seq(
-      "io.github.cquiroz"    %% "kuyfi"            % "0.9.2",
+      "io.github.cquiroz"    %% "kuyfi"            % "0.9.3",
       "org.apache.commons"   %  "commons-compress" % "1.18",
       "com.eed3si9n"         %% "gigahorse-okhttp" % "0.3.1",
-      "com.github.pathikrit" %% "better-files"     % "3.6.0",
+      "com.github.pathikrit" %% "better-files"     % "3.7.0",
       "org.typelevel"        %% "cats-core"        % "1.5.0",
       "org.typelevel"        %% "cats-effect"      % "1.1.0"
     ),
