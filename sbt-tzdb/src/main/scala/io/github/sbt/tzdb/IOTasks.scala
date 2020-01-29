@@ -71,7 +71,7 @@ object IOTasks {
             .map(
               p =>
                 TZDBCodeGenerator
-                  .exportAll(data, p._3.toJava, p._1, p._2, zonesFilter))
+                  .exportAll(data, p._3.toJava, p._1, zonesFilter))
             .sequence
     } yield f
 

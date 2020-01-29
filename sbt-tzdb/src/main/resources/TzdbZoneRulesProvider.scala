@@ -14,15 +14,15 @@ import scala.scalajs.reflect.annotation.EnableReflectiveInstantiation
 @EnableReflectiveInstantiation
 final class TzdbZoneRulesProvider extends ZoneRulesProvider {
   import zonedb.threeten.tzdb._
-  import scala.collection.JavaConverters._
 
   private val stdZonesMap =
     stdZones.asInstanceOf[js.Dictionary[js.Dynamic]].toMap
   private val fixedZonesMap = fixedZones.asInstanceOf[js.Dictionary[Int]].toMap
 
   override protected def provideZoneIds: java.util.Set[String] = {
-    val zones = new java.util.HashSet(
-      (stdZonesMap.keySet ++ fixedZonesMap.keySet ++ zoneLinks.keySet).asJava)
+    val zones = new java.util.HashSet[String]()
+    val zonesSet = (stdZonesMap.keySet ++ fixedZonesMap.keySet ++ zoneLinks.keySet)
+    zonesSet.foreach(zones.add(_))
     // I'm not totallly sure the reason why but TTB removes these ZoneIds
     // zones.remove("UTC")
     // zones.remove("GMT")
@@ -75,11 +75,17 @@ final class TzdbZoneRulesProvider extends ZoneRulesProvider {
       zr.l.asInstanceOf[js.Array[js.Array[Int]]].map(toZoneOffsetTransition)
     val lastRules =
       zr.r.asInstanceOf[js.Array[js.Array[Int]]].map(toZoneOffsetTransitionRule)
+    val standardTransitionsJ = new java.util.ArrayList[ZoneOffsetTransition]
+    standardTransitions.toList.foreach(standardTransitionsJ.add(_))
+    val transitionListJ = new java.util.ArrayList[ZoneOffsetTransition]
+    transitionList.toList.foreach(transitionListJ.add(_))
+    val lastRulesJ = new java.util.ArrayList[ZoneOffsetTransitionRule]
+    lastRules.toList.foreach(lastRulesJ.add(_))
     ZoneRules.of(bso,
                  bwo,
-                 standardTransitions.toList.asJava,
-                 transitionList.toList.asJava,
-                 lastRules.toList.asJava)
+                 standardTransitionsJ,
+                 transitionListJ,
+                 lastRulesJ)
   }
 
   override protected def provideRules(regionId: String,

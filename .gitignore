@@ -26,13 +26,8 @@
 shared/js/src/main/resources/
 tzdb/js/src/main/resources/
 
-/src/*/
-!/src/changes/
-!/src/main/
-!/src/site/
-!/src/test/
-
 **/TempTest.java
 /.idea/
 /threetenbp.iml
 .metaserver/
+project/metals.sbt
