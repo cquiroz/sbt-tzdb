@@ -46,7 +46,7 @@ lazy val sbt_tzdb = project
       "com.eed3si9n"         %% "gigahorse-okhttp" % "0.5.0",
       "com.github.pathikrit" %% "better-files"     % "3.8.0",
       "org.typelevel"        %% "cats-core"        % "2.1.1",
-      "org.typelevel"        %% "cats-effect"      % "2.0.0",
+      "org.typelevel"        %% "cats-effect"      % "2.1.1"
     ),
     addSbtPlugin("org.scala-js"      % "sbt-scalajs"  % "0.6.32"),
     scriptedLaunchOpts := { scriptedLaunchOpts.value ++
