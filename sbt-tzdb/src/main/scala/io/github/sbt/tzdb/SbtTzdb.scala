@@ -34,7 +34,7 @@ object TzdbPlugin extends AutoPlugin {
   }
 
   import autoImport._
-  override def trigger  = noTrigger
+  override def trigger = noTrigger
   override lazy val buildSettings = Seq(
     zonesFilter := { case _ => true },
     dbVersion := LatestVersion,
