@@ -1,7 +1,6 @@
 package io.gitub.sbt.tzdb
 
-import java.io.{File => JFile}
-import better.files._
+import java.io.{ File => JFile }
 import sbt._
 import sbt.util.Logger
 import Keys._
@@ -50,25 +49,27 @@ object TzdbPlugin extends AutoPlugin {
       },
       tzdbCodeGen :=
         tzdbCodeGenImpl(
-          sourceManaged = (sourceManaged in Compile).value,
+          sourceManaged    = (sourceManaged in Compile).value,
           resourcesManaged = (resourceManaged in Compile).value,
-          zonesFilter = zonesFilter.value,
-          dbVersion = dbVersion.value,
-          includeTTBP = includeTTBP.value,
-          log = streams.value.log
+          zonesFilter      = zonesFilter.value,
+          dbVersion        = dbVersion.value,
+          includeTTBP      = includeTTBP.value,
+          log              = streams.value.log
         )
     )
 
-  def tzdbCodeGenImpl(sourceManaged: JFile,
-                      resourcesManaged: JFile,
-                      zonesFilter: String => Boolean,
-                      dbVersion: TZDBVersion,
-                      includeTTBP: Boolean,
-                      log: Logger): Seq[JFile] = {
+  def tzdbCodeGenImpl(
+    sourceManaged:    JFile,
+    resourcesManaged: JFile,
+    zonesFilter:      String => Boolean,
+    dbVersion:        TZDBVersion,
+    includeTTBP:      Boolean,
+    log:              Logger
+  ): Seq[JFile] = {
 
     import cats._
     import cats.implicits._
-    
+
     val tzdbData: JFile = resourcesManaged / "tzdb"
     val ttbp = IOTasks.copyProvider(sourceManaged,
                                     "TzdbZoneRulesProvider.scala",
@@ -84,8 +85,8 @@ object TzdbPlugin extends AutoPlugin {
       e <- effect.IO(p.exists)
       j <- if (e) effect.IO(List(p)) else providerCopy.sequence
       f <- if (e) IOTasks.tzDataSources(sourceManaged, includeTTBP).map(_.map(_._3))
-          else
-            IOTasks.generateTZDataSources(sourceManaged, tzdbData, log, includeTTBP, zonesFilter)
+      else
+        IOTasks.generateTZDataSources(sourceManaged, tzdbData, log, includeTTBP, zonesFilter)
     } yield (j ::: f).toSeq).unsafeRunSync
     r.map(_.toJava)
   }

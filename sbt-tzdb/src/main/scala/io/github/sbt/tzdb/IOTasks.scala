@@ -1,11 +1,5 @@
 package io.gitub.sbt.tzdb
 
-import org.apache.commons.compress.archivers.ArchiveStreamFactory
-import org.apache.commons.compress.archivers.ArchiveInputStream
-import org.apache.commons.compress.archivers.ArchiveEntry
-import org.apache.commons.compress.compressors.CompressorStreamFactory
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import better.files._
 import better.files.Dsl._
@@ -17,40 +11,45 @@ import java.io.{
   FileInputStream,
   File => JFile
 }
-import java.nio.file.{Files, StandardCopyOption}
-import cats._
+import java.nio.file.{ Files, StandardCopyOption }
 import cats.implicits._
 import cats.effect._
 import sbt.Logger
 import kuyfi.TZDBCodeGenerator
 import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator._
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 
 object IOTasks {
-  def downloadTZDB(log: Logger,
-                   resourcesDir: JFile,
-                   tzdbVersion: TzdbPlugin.TZDBVersion): IO[Unit] = {
+  def downloadTZDB(
+    log:          Logger,
+    resourcesDir: JFile,
+    tzdbVersion:  TzdbPlugin.TZDBVersion
+  ): IO[Unit] = {
     val tzdbDir     = resourcesDir.toScala / "tzdb"
     val tzdbTarball = resourcesDir.toScala / "tzdb.tar.gz"
     if (!tzdbDir.exists) {
-      var url =
+      val url =
         s"http://www.iana.org/time-zones/repository/${tzdbVersion.path}.tar.gz"
       for {
         _ <- cats.effect.IO(
-              log.info(s"tzdb data missing. downloading ${tzdbVersion.id} version to $tzdbDir..."))
+          log.info(s"tzdb data missing. downloading ${tzdbVersion.id} version to $tzdbDir...")
+        )
         _ <- cats.effect.IO(log.info(s"downloading from $url"))
         _ <- cats.effect.IO(log.info(s"to file $tzdbTarball"))
         _ <- cats.effect.IO(mkdirs(tzdbDir))
         _ <- IOTasks.download(url, tzdbTarball)
         _ <- IOTasks.gunzipTar(tzdbTarball.toJava, tzdbDir.toJava)
-        x <- cats.effect.IO(tzdbTarball.delete())
+        _ <- cats.effect.IO(tzdbTarball.delete())
       } yield ()
     } else {
       cats.effect.IO(log.debug("tzdb files already available"))
     }
   }
 
-  def tzDataSources(base: JFile,
-                    includeTTBP: Boolean): IO[List[(String, String, better.files.File)]] = IO {
+  def tzDataSources(
+    base:        JFile,
+    includeTTBP: Boolean
+  ): IO[List[(String, String, better.files.File)]] = IO {
     val dataPath = base.toScala / "tzdb"
     val pathsJT =
       ("zonedb.java", "java.time", dataPath / "tzdb_java.scala")
@@ -58,21 +57,23 @@ object IOTasks {
     if (includeTTBP) List(pathsTTB, pathsJT) else List(pathsJT)
   }
 
-  def generateTZDataSources(base: JFile,
-                            data: JFile,
-                            log: Logger,
-                            includeTTBP: Boolean,
-                            zonesFilter: String => Boolean): IO[List[better.files.File]] =
+  def generateTZDataSources(
+    base:        JFile,
+    data:        JFile,
+    log:         Logger,
+    includeTTBP: Boolean,
+    zonesFilter: String => Boolean
+  ): IO[List[better.files.File]] =
     for {
       paths <- tzDataSources(base, includeTTBP)
       _     <- IO(log.info(s"Generating tzdb from db at $data to $base"))
       _     <- IO(paths.foreach(t => mkdirs(t._3.parent)))
       f <- paths
-            .map(
-              p =>
-                TZDBCodeGenerator
-                  .exportAll(data, p._3.toJava, p._1, zonesFilter))
-            .sequence
+        .map(p =>
+          TZDBCodeGenerator
+            .exportAll(data, p._3.toJava, p._1, zonesFilter)
+        )
+        .sequence
     } yield f
 
   def providerFile(base: JFile, name: String, packageDir: String): IO[File] = IO {
@@ -146,8 +147,8 @@ object IOTasks {
       } else {
         file.getParentFile.mkdirs()
         file.createNewFile
-        var btoRead = new Array[Byte](1 * 1024)
-        var bout    = new BufferedOutputStream(new FileOutputStream(file))
+        val btoRead = new Array[Byte](1 * 1024)
+        val bout    = new BufferedOutputStream(new FileOutputStream(file))
         var len     = 0
         len = tarIn.read(btoRead)
         while (len != -1) {
@@ -155,7 +156,6 @@ object IOTasks {
           len = tarIn.read(btoRead)
         }
         bout.close()
-        btoRead = null
       }
       tarEntry = tarIn.getNextTarEntry()
     }
