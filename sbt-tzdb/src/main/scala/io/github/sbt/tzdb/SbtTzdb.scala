@@ -5,7 +5,6 @@ import sbt._
 import sbt.util.Logger
 import Keys._
 import cats.effect
-import org.scalajs.sbtplugin
 
 object TzdbPlugin extends AutoPlugin {
   sealed trait TZDBVersion {
@@ -35,7 +34,6 @@ object TzdbPlugin extends AutoPlugin {
   }
 
   import autoImport._
-  override def requires = sbtplugin.ScalaJSPlugin
   override def trigger  = noTrigger
   override lazy val buildSettings = Seq(
     zonesFilter := { case _ => true },
