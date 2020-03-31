@@ -27,14 +27,12 @@ inThisBuild(
   )
 )
 
-
 lazy val commonSettings = Seq(
-  name         := "sbt-tzdb",
-  description  := "Sbt plugin to build custom timezone databases",
+  name := "sbt-tzdb",
+  description := "Sbt plugin to build custom timezone databases",
   organization := "io.github.cquiroz",
-  scalaVersion       := scalaVer,
-
-  javaOptions ++= Seq("-Dfile.encoding=UTF8"),
+  scalaVersion := scalaVer,
+  javaOptions ++= Seq("-Dfile.encoding=UTF8")
 )
 
 lazy val sbt_tzdb = project
@@ -44,16 +42,16 @@ lazy val sbt_tzdb = project
   .settings(
     name := "sbt-tzdb",
     libraryDependencies ++= Seq(
-      "io.github.cquiroz"    %%  "kuyfi" % "1.0.0",
-      "org.apache.commons"   %  "commons-compress" % "1.20",
-      "com.eed3si9n"         %% "gigahorse-okhttp" % "0.5.0",
-      "com.github.pathikrit" %% "better-files"     % "3.8.0",
-      "org.typelevel"        %% "cats-core"        % "2.1.1",
-      "org.typelevel"        %% "cats-effect"      % "2.1.2"
+      "io.github.cquiroz" %% "kuyfi" % "1.0.0+15-5982805f+20200324-1655-SNAPSHOT",
+      "org.apache.commons" % "commons-compress" % "1.20",
+      "com.eed3si9n" %% "gigahorse-okhttp" % "0.5.0",
+      "com.github.pathikrit" %% "better-files" % "3.8.0",
+      "org.typelevel" %% "cats-core" % "2.1.1",
+      "org.typelevel" %% "cats-effect" % "2.1.2"
     ),
-    scriptedLaunchOpts := { scriptedLaunchOpts.value ++
-      Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+    scriptedLaunchOpts := {
+      scriptedLaunchOpts.value ++
+        Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
     },
     scriptedBufferLog := false
   )
-
