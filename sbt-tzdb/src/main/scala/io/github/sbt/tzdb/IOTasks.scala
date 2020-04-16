@@ -16,7 +16,6 @@ import cats.implicits._
 import cats.effect._
 import sbt.Logger
 import kuyfi.TZDBCodeGenerator
-import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator._
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 
 object IOTasks {
@@ -62,6 +61,7 @@ object IOTasks {
     data:        JFile,
     log:         Logger,
     includeTTBP: Boolean,
+    jsOptimized: Boolean,
     zonesFilter: String => Boolean
   ): IO[List[better.files.File]] =
     for {
@@ -70,11 +70,18 @@ object IOTasks {
       _     <- IO(paths.foreach(t => mkdirs(t._3.parent)))
       f <- paths
         .map(p =>
-          TZDBCodeGenerator
-            .exportAll(data, p._3.toJava, p._1, zonesFilter)
+          if (jsOptimized) {
+            import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator._
+            TZDBCodeGenerator
+              .exportAll(data, p._3.toJava, p._1, p._2, zonesFilter)
+          } else {
+            import kuyfi.TZDBCodeGenerator.PureTreeGenerator._
+            TZDBCodeGenerator
+              .exportAll(data, p._3.toJava, p._1, p._2, zonesFilter)
+          }
         )
         .sequence
-    } yield f
+    } yield f.map(_.toScala)
 
   def providerFile(base: JFile, name: String, packageDir: String): IO[File] = IO {
     val packagePath     = packageDir.replaceAll("\\.", "/")
@@ -83,7 +90,13 @@ object IOTasks {
     destinationFile
   }
 
-  def copyProvider(base: JFile, name: String, packageDir: String, isJava: Boolean): IO[File] = IO {
+  def copyProvider(
+    base:       JFile,
+    sub:        String,
+    name:       String,
+    packageDir: String,
+    isJava:     Boolean
+  ): IO[File] = IO {
     def replacements(line: String): String =
       line
         .replaceAll("package", s"package $packageDir")
@@ -98,7 +111,7 @@ object IOTasks {
         .replaceAll("private\\s*\\[bp\\]", "private[time]")
 
     val packagePath         = packageDir.replaceAll("\\.", "/")
-    val stream: InputStream = getClass.getResourceAsStream("/" + name)
+    val stream: InputStream = getClass.getResourceAsStream(s"/$sub/$name")
     val destinationPath     = base.toScala / packagePath
     mkdirs(destinationPath)
     val destinationFile = destinationPath / name
