@@ -87,7 +87,7 @@ object TzdbPlugin extends AutoPlugin {
                            "java.time.zone",
                            true)
     val providerCopy = if (includeTTBP) List(ttbp, jt) else List(jt)
-    val r = (for {
+    (for {
       _ <- IOTasks.downloadTZDB(log, resourcesManaged, dbVersion)
       // Use it to detect if files have been already generated
       p <- IOTasks.providerFile(sourceManaged / sub,
@@ -104,6 +104,5 @@ object TzdbPlugin extends AutoPlugin {
                                       jsOptimized,
                                       zonesFilter)
     } yield (j ::: f).toSeq).unsafeRunSync
-    r.map(_.toJava)
   }
 }
