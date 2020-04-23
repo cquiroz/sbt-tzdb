@@ -1,5 +1,9 @@
 # Changes
 
+## 1.0.0
+
+* Updated to use scala 2.13.2
+
 ## 0.3.2
 
 * Bugfix on the tzdb parser
