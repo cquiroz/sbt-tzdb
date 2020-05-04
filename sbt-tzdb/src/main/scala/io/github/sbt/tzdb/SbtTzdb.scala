@@ -25,9 +25,9 @@ object TzdbPlugin extends AutoPlugin {
     /*
      * Settings
      */
-    val zonesFilter = settingKey[String => Boolean]("Filter for zones")
-    val dbVersion   = settingKey[TZDBVersion]("Version of the tzdb")
-    val tzdbCodeGen =
+    val zonesFilter                   = settingKey[String => Boolean]("Filter for zones")
+    val dbVersion                     = settingKey[TZDBVersion]("Version of the tzdb")
+    val tzdbCodeGen                   =
       taskKey[Seq[JFile]]("Generate scala.js compatible database of tzdb data")
     val includeTTBP: TaskKey[Boolean] =
       taskKey[Boolean]("Include also a provider for threeten bp")
@@ -36,27 +36,27 @@ object TzdbPlugin extends AutoPlugin {
   }
 
   import autoImport._
-  override def trigger = noTrigger
+  override def trigger            = noTrigger
   override lazy val buildSettings = Seq(
     zonesFilter := { case _ => true },
     dbVersion := LatestVersion,
     includeTTBP := false,
     jsOptimized := true
   )
-  override val projectSettings =
+  override val projectSettings    =
     Seq(
       sourceGenerators in Compile += Def.task {
         tzdbCodeGen.value
       },
       tzdbCodeGen :=
         tzdbCodeGenImpl(
-          sourceManaged    = (sourceManaged in Compile).value,
+          sourceManaged = (sourceManaged in Compile).value,
           resourcesManaged = (resourceManaged in Compile).value,
-          zonesFilter      = zonesFilter.value,
-          dbVersion        = dbVersion.value,
-          includeTTBP      = includeTTBP.value,
-          jsOptimized      = jsOptimized.value,
-          log              = streams.value.log
+          zonesFilter = zonesFilter.value,
+          dbVersion = dbVersion.value,
+          includeTTBP = includeTTBP.value,
+          jsOptimized = jsOptimized.value,
+          log = streams.value.log
         )
     )
 
@@ -75,34 +75,36 @@ object TzdbPlugin extends AutoPlugin {
 
     val tzdbData: JFile = resourcesManaged / "tzdb"
     val sub             = if (jsOptimized) "js" else "jvm"
-    val ttbp = IOTasks.copyProvider(sourceManaged,
+    val ttbp            = IOTasks.copyProvider(sourceManaged,
                                     sub,
                                     "TzdbZoneRulesProvider.scala",
                                     "org.threeten.bp.zone",
-                                    false)
-    val jt =
+                                    false
+    )
+    val jt              =
       IOTasks.copyProvider(sourceManaged,
                            sub,
                            "TzdbZoneRulesProvider.scala",
                            "java.time.zone",
-                           true)
-    val providerCopy = if (includeTTBP) List(ttbp, jt) else List(jt)
+                           true
+      )
+    val providerCopy    = if (includeTTBP) List(ttbp, jt) else List(jt)
     (for {
       _ <- IOTasks.downloadTZDB(log, resourcesManaged, dbVersion)
       // Use it to detect if files have been already generated
-      p <- IOTasks.providerFile(sourceManaged / sub,
-                                "TzdbZoneRulesProvider.scala",
-                                "java.time.zone")
+      p <-
+        IOTasks.providerFile(sourceManaged / sub, "TzdbZoneRulesProvider.scala", "java.time.zone")
       e <- effect.IO(p.exists)
       j <- if (e) effect.IO(List(p)) else providerCopy.sequence
       f <- if (e) IOTasks.tzDataSources(sourceManaged, includeTTBP).map(_.map(_._3))
-      else
-        IOTasks.generateTZDataSources(sourceManaged,
-                                      tzdbData,
-                                      log,
-                                      includeTTBP,
-                                      jsOptimized,
-                                      zonesFilter)
+           else
+             IOTasks.generateTZDataSources(sourceManaged,
+                                           tzdbData,
+                                           log,
+                                           includeTTBP,
+                                           jsOptimized,
+                                           zonesFilter
+             )
     } yield (j ::: f).toSeq).unsafeRunSync
   }
 }
