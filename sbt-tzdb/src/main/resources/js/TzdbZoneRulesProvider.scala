@@ -22,13 +22,9 @@ final class TzdbZoneRulesProvider extends ZoneRulesProvider {
   override protected def provideZoneIds: java.util.Set[String] = {
     val zones = new java.util.HashSet[String]()
     val zonesSet = (stdZonesMap.keySet ++ fixedZonesMap.keySet ++ zoneLinks.keySet)
-    zonesSet.foreach(zones.add(_))
     // I'm not totallly sure the reason why but TTB removes these ZoneIds
-    // zones.remove("UTC")
-    // zones.remove("GMT")
-    zones.remove("GMT0")
-    zones.remove("GMT+0")
-    zones.remove("GMT-0")
+    val zonesSetRemovals = Set("GMT0", "GMT+0", "GMT-0"/*, "UTC", "GMT"*/)
+    (zonesSet -- zonesSetRemovals).foreach(zones.add(_))
     zones
   }
 
