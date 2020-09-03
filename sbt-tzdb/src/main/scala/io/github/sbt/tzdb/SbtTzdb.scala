@@ -71,7 +71,7 @@ object TzdbPlugin extends AutoPlugin {
   ): Seq[JFile] = {
 
     import cats._
-    import cats.implicits._
+    import cats.syntax.all._
 
     val tzdbData: JFile = resourcesManaged / "tzdb"
     val sub             = if (jsOptimized) "js" else "jvm"

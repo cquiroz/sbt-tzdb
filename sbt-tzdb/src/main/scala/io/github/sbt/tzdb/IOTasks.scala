@@ -3,7 +3,7 @@ package io.gitub.sbt.tzdb
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import java.io._
 import java.nio.file.{ Files, StandardCopyOption }
-import cats.implicits._
+import cats.syntax.all._
 import scala.collection.JavaConverters._
 import sbt._
 import kuyfi.TZDBCodeGenerator
