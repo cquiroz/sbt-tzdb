@@ -7,6 +7,8 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 
 resolvers in Global += Resolver.sonatypeRepo("public")
 
+pluginCrossBuild / sbtVersion := "1.2.8"
+
 inThisBuild(
   List(
     organization := "io.github.cquiroz",
