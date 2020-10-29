@@ -127,7 +127,7 @@ object IOTasks {
     cats.effect.IO {
       import gigahorse._, support.okhttp.Gigahorse
       import scala.concurrent._, duration._
-      Gigahorse.withHttp(Gigahorse.config) { http =>
+      Gigahorse.withHttp(gigahorse.Config()) { http =>
         val r = Gigahorse.url(url)
         val f = http.download(r, to)
         Await.result(f, 120.seconds)
