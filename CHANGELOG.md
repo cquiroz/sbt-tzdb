@@ -1,5 +1,9 @@
 # Changes
 
+## 1.0.1
+
+* use gigahorses default config to avoid config loading from classpath @an-tex
+
 ## 1.0.0
 
 * Updated to use scala 2.13.2
