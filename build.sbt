@@ -1,7 +1,7 @@
 import sbt._
 import sbt.io.Using
 
-val scalaVer = "2.12.13"
+val scalaVer = "2.13.5"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
