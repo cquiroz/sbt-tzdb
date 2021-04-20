@@ -47,7 +47,7 @@ lazy val sbt_tzdb = project
       "io.github.cquiroz" %% "kuyfi" % "1.3.0",
       "org.apache.commons" % "commons-compress" % "1.20",
       "com.eed3si9n" %% "gigahorse-okhttp" % "0.5.0",
-      "org.typelevel" %% "cats-core" % "2.5.0",
+      "org.typelevel" %% "cats-core" % "2.6.0",
       "org.typelevel" %% "cats-effect" % "2.3.3"
     ),
     scriptedLaunchOpts := {
