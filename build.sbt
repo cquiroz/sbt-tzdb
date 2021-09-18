@@ -48,7 +48,7 @@ lazy val sbt_tzdb = project
       "org.apache.commons" % "commons-compress" % "1.21",
       "com.eed3si9n" %% "gigahorse-okhttp" % "0.5.0",
       "org.typelevel" %% "cats-core" % "2.6.1",
-      "org.typelevel" %% "cats-effect" % "2.5.3"
+      "org.typelevel" %% "cats-effect" % "2.5.4"
     ),
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++
