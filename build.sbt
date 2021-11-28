@@ -18,7 +18,8 @@ inThisBuild(
       Developer("cquiroz",
                 "Carlos Quiroz",
                 "carlos.m.quiroz@gmail.com",
-                url("https://github.com/cquiroz"))
+                url("https://github.com/cquiroz")
+      )
     ),
     scmInfo := Some(
       ScmInfo(
@@ -44,11 +45,11 @@ lazy val sbt_tzdb = project
   .settings(
     name := "sbt-tzdb",
     libraryDependencies ++= Seq(
-      "io.github.cquiroz" %% "kuyfi" % "1.3.0",
+      "io.github.cquiroz" %% "kuyfi"            % "1.3.0",
       "org.apache.commons" % "commons-compress" % "1.21",
-      "com.eed3si9n" %% "gigahorse-okhttp" % "0.5.0",
-      "org.typelevel" %% "cats-core" % "2.6.1",
-      "org.typelevel" %% "cats-effect" % "2.5.4"
+      "com.eed3si9n"      %% "gigahorse-okhttp" % "0.5.0",
+      "org.typelevel"     %% "cats-core"        % "2.6.1",
+      "org.typelevel"     %% "cats-effect"      % "3.3.0"
     ),
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++
