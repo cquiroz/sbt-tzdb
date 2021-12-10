@@ -5,7 +5,7 @@ val scalaVer = "2.12.15"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-resolvers in Global += Resolver.sonatypeRepo("public")
+(Global / resolvers) += Resolver.sonatypeRepo("public")
 
 pluginCrossBuild / sbtVersion := "1.2.8"
 
