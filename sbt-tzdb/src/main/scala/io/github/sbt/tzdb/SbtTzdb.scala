@@ -3,6 +3,7 @@ package io.gitub.sbt.tzdb
 import java.io.{ File => JFile }
 import sbt._
 import sbt.util.Logger
+import sbt.util.CacheImplicits._
 import Keys._
 import cats.effect
 
@@ -25,14 +26,14 @@ object TzdbPlugin extends AutoPlugin {
     /*
      * Settings
      */
-    val zonesFilter                   = settingKey[String => Boolean]("Filter for zones")
-    val dbVersion                     = settingKey[TZDBVersion]("Version of the tzdb")
-    val tzdbCodeGen                   =
+    val zonesFilter                      = settingKey[String => Boolean]("Filter for zones")
+    val dbVersion                        = settingKey[TZDBVersion]("Version of the tzdb")
+    val tzdbCodeGen                      =
       taskKey[Seq[JFile]]("Generate scala.js compatible database of tzdb data")
-    val includeTTBP: TaskKey[Boolean] =
-      taskKey[Boolean]("Include also a provider for threeten bp")
-    val jsOptimized: TaskKey[Boolean] =
-      taskKey[Boolean]("Generates a version with smaller size but only usable on scala.js")
+    val includeTTBP: SettingKey[Boolean] =
+      settingKey[Boolean]("Include also a provider for threeten bp")
+    val jsOptimized: SettingKey[Boolean] =
+      settingKey[Boolean]("Generates a version with smaller size but only usable on scala.js")
   }
 
   import autoImport._
@@ -48,16 +49,25 @@ object TzdbPlugin extends AutoPlugin {
       sourceGenerators in Compile += Def.task {
         tzdbCodeGen.value
       },
-      tzdbCodeGen :=
-        tzdbCodeGenImpl(
-          sourceManaged = (sourceManaged in Compile).value,
-          resourcesManaged = (resourceManaged in Compile).value,
-          zonesFilter = zonesFilter.value,
-          dbVersion = dbVersion.value,
-          includeTTBP = includeTTBP.value,
-          jsOptimized = jsOptimized.value,
-          log = streams.value.log
-        )
+      tzdbCodeGen := {
+        val cacheLocation                                  = streams.value.cacheDirectory / "sbt-tzdb"
+        val log                                            = streams.value.log
+        val cachedActionFunction: Set[JFile] => Set[JFile] = FileFunction.cached(
+          cacheLocation,
+          inStyle = FilesInfo.hash
+        ) { _ =>
+          tzdbCodeGenImpl(
+            sourceManaged = (sourceManaged in Compile).value,
+            resourcesManaged = (resourceManaged in Compile).value,
+            zonesFilter = zonesFilter.value,
+            dbVersion = dbVersion.value,
+            includeTTBP = includeTTBP.value,
+            jsOptimized = jsOptimized.value,
+            log = log
+          )
+        }
+        cachedActionFunction(Set((resourceManaged in Compile).value / "tzdb.tar.gz")).toSeq
+      }
     )
 
   def tzdbCodeGenImpl(
@@ -68,7 +78,7 @@ object TzdbPlugin extends AutoPlugin {
     includeTTBP:      Boolean,
     jsOptimized:      Boolean,
     log:              Logger
-  ): Seq[JFile] = {
+  ): Set[JFile] = {
 
     import cats._
     import cats.syntax.all._
@@ -105,6 +115,6 @@ object TzdbPlugin extends AutoPlugin {
                                            jsOptimized,
                                            zonesFilter
              )
-    } yield (j ::: f).toSeq).unsafeRunSync
+    } yield (j ::: f).toSet).unsafeRunSync
   }
 }
