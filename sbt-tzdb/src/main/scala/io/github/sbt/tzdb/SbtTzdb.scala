@@ -46,7 +46,7 @@ object TzdbPlugin extends AutoPlugin {
   )
   override val projectSettings    =
     Seq(
-      sourceGenerators in Compile += Def.task {
+      Compile / sourceGenerators += Def.task {
         tzdbCodeGen.value
       },
       tzdbCodeGen := {
@@ -57,8 +57,8 @@ object TzdbPlugin extends AutoPlugin {
           inStyle = FilesInfo.hash
         ) { _ =>
           tzdbCodeGenImpl(
-            sourceManaged = (sourceManaged in Compile).value,
-            resourcesManaged = (resourceManaged in Compile).value,
+            sourceManaged = (Compile / sourceManaged).value,
+            resourcesManaged = (Compile / resourceManaged).value,
             zonesFilter = zonesFilter.value,
             dbVersion = dbVersion.value,
             includeTTBP = includeTTBP.value,
@@ -66,7 +66,7 @@ object TzdbPlugin extends AutoPlugin {
             log = log
           )
         }
-        cachedActionFunction(Set((resourceManaged in Compile).value / "tzdb.tar.gz")).toSeq
+        cachedActionFunction(Set((Compile / resourceManaged).value / "tzdb.tar.gz")).toSeq
       }
     )
 
