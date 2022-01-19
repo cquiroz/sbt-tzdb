@@ -113,7 +113,7 @@ final class TzdbZoneRulesProvider extends ZoneRulesProvider {
           .get(actualRegion)
           .map(i => ZoneRules.of(ZoneOffset.ofTotalSeconds(i))))
       .map { z =>
-        val r = io.github.cquiroz.scalajavatime.common.ZoneMap[String, ZoneRules]
+        val r = new ZoneMap[String, ZoneRules]
         r.put(version, z)
         r
       }

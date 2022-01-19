@@ -1,4 +1,4 @@
-package io.gitub.sbt.tzdb
+package io.github.sbt.tzdb
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import java.io._
@@ -49,30 +49,29 @@ object IOTasks {
     }
 
   def generateTZDataSources(
-    base:        File,
-    data:        File,
-    log:         Logger,
-    includeTTBP: Boolean,
-    jsOptimized: Boolean,
-    zonesFilter: String => Boolean
+    base:         File,
+    data:         File,
+    log:          Logger,
+    includeTTBP:  Boolean,
+    tzdbPlatform: TzdbPlugin.Platform,
+    zonesFilter:  String => Boolean
   ): cats.effect.IO[List[File]] =
     for {
       paths <- tzDataSources(base, includeTTBP)
       _     <- cats.effect.IO(log.info(s"Generating tzdb from db at $data to $base"))
       _     <- cats.effect.IO(paths.foreach(t => t._3.getParentFile().mkdirs()))
-      f     <- paths
-             .map(p =>
-               if (jsOptimized) {
-                 import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator._
+      f     <- paths.map { p =>
+             tzdbPlatform match {
+               case TzdbPlugin.Platform.Js =>
+                 import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator.*
                  TZDBCodeGenerator
                    .exportAll(data, p._3, p._1, p._2, zonesFilter)
-               } else {
-                 import kuyfi.TZDBCodeGenerator.PureTreeGenerator._
+               case _                      =>
+                 import kuyfi.TZDBCodeGenerator.PureTreeGenerator.*
                  TZDBCodeGenerator
                    .exportAll(data, p._3, p._1, p._2, zonesFilter)
-               }
-             )
-             .sequence
+             }
+           }.sequence
     } yield f
 
   def providerFile(base: File, name: String, packageDir: String): cats.effect.IO[File] =
@@ -125,8 +124,11 @@ object IOTasks {
 
   def download(url: String, to: File) =
     cats.effect.IO {
-      import gigahorse._, support.okhttp.Gigahorse
-      import scala.concurrent._, duration._
+      import gigahorse.*
+      import support.okhttp.Gigahorse
+
+      import scala.concurrent.*
+      import duration.*
       Gigahorse.withHttp(gigahorse.Config()) { http =>
         val r = Gigahorse.url(url)
         val f = http.download(r, to)

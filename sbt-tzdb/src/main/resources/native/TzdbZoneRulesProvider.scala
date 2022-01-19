@@ -1,7 +1,6 @@
 package
 
 import org.threeten.bp.DateTimeException
-import java.util.TreeMap
 
 import org.portablescala.reflect.annotation.EnableReflectiveInstantiation
 
@@ -43,7 +42,7 @@ final class TzdbZoneRulesProvider extends ZoneRulesProvider {
         fixedZones
           .get(actualRegion))
       .map { z =>
-        val r = new TreeMap[String, ZoneRules]
+        val r = new ZoneMap[String, ZoneRules]
         r.put(version, z)
         r
       }
