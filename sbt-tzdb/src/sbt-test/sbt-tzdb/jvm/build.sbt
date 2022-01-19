@@ -7,7 +7,7 @@ scalaVersion := "2.13.1"
 
 crossScalaVersions := Seq("2.13.1", "2.12.10")
 
-jsOptimized := false
+tzdbPlatform := TzdbPlugin.Platform.Jvm
 
 dbVersion := TzdbPlugin.Version("2019c")
 

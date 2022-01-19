@@ -1,4 +1,4 @@
-package io.gitub.sbt.tzdb
+package io.github.sbt.tzdb
 
 import java.io.{ File => JFile }
 import sbt._
@@ -21,19 +21,27 @@ object TzdbPlugin extends AutoPlugin {
     val path: String = s"releases/tzdata$version"
   }
 
+  sealed abstract class Platform(val name: String) extends Product with Serializable
+  final object Platform {
+    final case object Jvm    extends Platform("jvm")
+    final case object Js     extends Platform("js")
+    final case object Native extends Platform("native")
+  }
+
   object autoImport {
 
     /*
      * Settings
      */
-    val zonesFilter                      = settingKey[String => Boolean]("Filter for zones")
-    val dbVersion                        = settingKey[TZDBVersion]("Version of the tzdb")
-    val tzdbCodeGen                      =
+    val zonesFilter                        = settingKey[String => Boolean]("Filter for zones")
+    val dbVersion                          = settingKey[TZDBVersion]("Version of the tzdb")
+    val tzdbCodeGen                        =
       taskKey[Seq[JFile]]("Generate scala.js compatible database of tzdb data")
-    val includeTTBP: SettingKey[Boolean] =
+    val includeTTBP: SettingKey[Boolean]   =
       settingKey[Boolean]("Include also a provider for threeten bp")
-    val jsOptimized: SettingKey[Boolean] =
-      settingKey[Boolean]("Generates a version with smaller size but only usable on scala.js")
+    val tzdbPlatform: SettingKey[Platform] = settingKey[Platform](
+      "The generated code is platform specific. Specify what is the target platform."
+    )
   }
 
   import autoImport._
@@ -42,7 +50,7 @@ object TzdbPlugin extends AutoPlugin {
     zonesFilter := { case _ => true },
     dbVersion := LatestVersion,
     includeTTBP := false,
-    jsOptimized := true
+    tzdbPlatform := Platform.Js
   )
   override val projectSettings    =
     Seq(
@@ -62,7 +70,7 @@ object TzdbPlugin extends AutoPlugin {
             zonesFilter = zonesFilter.value,
             dbVersion = dbVersion.value,
             includeTTBP = includeTTBP.value,
-            jsOptimized = jsOptimized.value,
+            tzdbPlatform = tzdbPlatform.value,
             log = log
           )
         }
@@ -76,7 +84,7 @@ object TzdbPlugin extends AutoPlugin {
     zonesFilter:      String => Boolean,
     dbVersion:        TZDBVersion,
     includeTTBP:      Boolean,
-    jsOptimized:      Boolean,
+    tzdbPlatform:     Platform,
     log:              Logger
   ): Set[JFile] = {
 
@@ -84,26 +92,28 @@ object TzdbPlugin extends AutoPlugin {
     import cats.syntax.all._
 
     val tzdbData: JFile = resourcesManaged / "tzdb"
-    val sub             = if (jsOptimized) "js" else "jvm"
-    val ttbp            = IOTasks.copyProvider(sourceManaged,
-                                    sub,
-                                    "TzdbZoneRulesProvider.scala",
-                                    "org.threeten.bp.zone",
-                                    false
+    val ttbp            = IOTasks.copyProvider(
+      sourceManaged,
+      tzdbPlatform.name,
+      "TzdbZoneRulesProvider.scala",
+      "org.threeten.bp.zone",
+      false
     )
-    val jt              =
-      IOTasks.copyProvider(sourceManaged,
-                           sub,
-                           "TzdbZoneRulesProvider.scala",
-                           "java.time.zone",
-                           true
-      )
+    val jt              = IOTasks.copyProvider(
+      sourceManaged,
+      tzdbPlatform.name,
+      "TzdbZoneRulesProvider.scala",
+      "java.time.zone",
+      true
+    )
     val providerCopy    = if (includeTTBP) List(ttbp, jt) else List(jt)
     (for {
       _ <- IOTasks.downloadTZDB(log, resourcesManaged, dbVersion)
       // Use it to detect if files have been already generated
-      p <-
-        IOTasks.providerFile(sourceManaged / sub, "TzdbZoneRulesProvider.scala", "java.time.zone")
+      p <- IOTasks.providerFile(sourceManaged / tzdbPlatform.name,
+                                "TzdbZoneRulesProvider.scala",
+                                "java.time.zone"
+           )
       e <- effect.IO(p.exists)
       j <- if (e) effect.IO(List(p)) else providerCopy.sequence
       f <- if (e) IOTasks.tzDataSources(sourceManaged, includeTTBP).map(_.map(_._3))
@@ -112,7 +122,7 @@ object TzdbPlugin extends AutoPlugin {
                                            tzdbData,
                                            log,
                                            includeTTBP,
-                                           jsOptimized,
+                                           tzdbPlatform,
                                            zonesFilter
              )
     } yield (j ::: f).toSet).unsafeRunSync
