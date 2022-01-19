@@ -92,19 +92,20 @@ object TzdbPlugin extends AutoPlugin {
     import cats.syntax.all._
 
     val tzdbData: JFile = resourcesManaged / "tzdb"
-    val ttbp            = IOTasks.copyProvider(sourceManaged,
-                                    tzdbPlatform.name,
-                                    "TzdbZoneRulesProvider.scala",
-                                    "org.threeten.bp.zone",
-                                    false
+    val ttbp            = IOTasks.copyProvider(
+      sourceManaged,
+      tzdbPlatform.name,
+      "TzdbZoneRulesProvider.scala",
+      "org.threeten.bp.zone",
+      false
     )
-    val jt              =
-      IOTasks.copyProvider(sourceManaged,
-                           tzdbPlatform.name,
-                           "TzdbZoneRulesProvider.scala",
-                           "java.time.zone",
-                           true
-      )
+    val jt              = IOTasks.copyProvider(
+      sourceManaged,
+      tzdbPlatform.name,
+      "TzdbZoneRulesProvider.scala",
+      "java.time.zone",
+      true
+    )
     val providerCopy    = if (includeTTBP) List(ttbp, jt) else List(jt)
     (for {
       _ <- IOTasks.downloadTZDB(log, resourcesManaged, dbVersion)
