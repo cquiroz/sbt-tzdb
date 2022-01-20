@@ -12,7 +12,7 @@ pluginCrossBuild / sbtVersion := "1.2.8"
 inThisBuild(
   List(
     organization := "io.github.cquiroz",
-    homepage := Some(url("https://github.com/cquiroz/sbt-zdb")),
+    homepage := Some(url("https://github.com/cquiroz/sbt-tzdb")),
     licenses := Seq("BSD 3-Clause License" -> url("https://opensource.org/licenses/BSD-3-Clause")),
     developers := List(
       Developer("cquiroz",
@@ -23,8 +23,8 @@ inThisBuild(
     ),
     scmInfo := Some(
       ScmInfo(
-        url("https://github.com/cquiroz/sbt-zdb"),
-        "scm:git:git@github.com:cquiroz/sbt-zdb.git"
+        url("https://github.com/cquiroz/sbt-tzdb"),
+        "scm:git:git@github.com:cquiroz/sbt-tzdb.git"
       )
     )
   )
