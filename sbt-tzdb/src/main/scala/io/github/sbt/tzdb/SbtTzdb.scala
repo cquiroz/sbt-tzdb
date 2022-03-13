@@ -28,6 +28,13 @@ object TzdbPlugin extends AutoPlugin {
     final case object Native extends Platform("native")
   }
 
+  sealed abstract class Dialect(val name: String) extends Product with Serializable
+  final object Dialect {
+    final case object Scala2       extends Dialect("scala-2")
+    final case object Scala3       extends Dialect("scala-3")
+    final case object Scala3Future extends Dialect("scala-3-future")
+  }
+
   object autoImport {
 
     /*
@@ -35,6 +42,8 @@ object TzdbPlugin extends AutoPlugin {
      */
     val zonesFilter                        = settingKey[String => Boolean]("Filter for zones")
     val dbVersion                          = settingKey[TZDBVersion]("Version of the tzdb")
+    // The fact that scalacOptions is a Task forces this to also be a task.
+    val generatedSourceDialect             = taskKey[Dialect]("The Scala dialect of the generated sources.")
     val tzdbCodeGen                        =
       taskKey[Seq[JFile]]("Generate scala.js compatible database of tzdb data")
     val includeTTBP: SettingKey[Boolean]   =
@@ -54,10 +63,21 @@ object TzdbPlugin extends AutoPlugin {
   )
   override val projectSettings    =
     Seq(
+      generatedSourceDialect := {
+        val neededFlags = Set("-indent", "-new-syntax", "-source:future")
+        if (scalaBinaryVersion.value == "3" && neededFlags.forall(scalacOptions.value.contains)) {
+          Dialect.Scala3Future
+        } else if (scalaBinaryVersion.value == "3" || scalacOptions.value.contains("-Xsource:3")) {
+          Dialect.Scala3
+        } else {
+          Dialect.Scala2
+        }
+      },
       Compile / sourceGenerators += Def.task {
         tzdbCodeGen.value
       },
       tzdbCodeGen := {
+        lazy val dialect = generatedSourceDialect.value
         val cacheLocation                                  = streams.value.cacheDirectory / "sbt-tzdb"
         val log                                            = streams.value.log
         val cachedActionFunction: Set[JFile] => Set[JFile] = FileFunction.cached(
@@ -71,6 +91,7 @@ object TzdbPlugin extends AutoPlugin {
             dbVersion = dbVersion.value,
             includeTTBP = includeTTBP.value,
             tzdbPlatform = tzdbPlatform.value,
+            dialect = dialect,
             log = log
           )
         }
@@ -85,23 +106,29 @@ object TzdbPlugin extends AutoPlugin {
     dbVersion:        TZDBVersion,
     includeTTBP:      Boolean,
     tzdbPlatform:     Platform,
+    dialect:          Dialect,
     log:              Logger
   ): Set[JFile] = {
 
     import cats._
     import cats.syntax.all._
 
+    val sourceDir = tzdbPlatform match {
+      case Platform.Js => s"${tzdbPlatform.name}/${dialect.name}"
+      case _ => tzdbPlatform.name
+    }
+
     val tzdbData: JFile = resourcesManaged / "tzdb"
     val ttbp            = IOTasks.copyProvider(
       sourceManaged,
-      tzdbPlatform.name,
+      sourceDir,
       "TzdbZoneRulesProvider.scala",
       "org.threeten.bp.zone",
       false
     )
     val jt              = IOTasks.copyProvider(
       sourceManaged,
-      tzdbPlatform.name,
+      sourceDir,
       "TzdbZoneRulesProvider.scala",
       "java.time.zone",
       true
@@ -110,7 +137,7 @@ object TzdbPlugin extends AutoPlugin {
     (for {
       _ <- IOTasks.downloadTZDB(log, resourcesManaged, dbVersion)
       // Use it to detect if files have been already generated
-      p <- IOTasks.providerFile(sourceManaged / tzdbPlatform.name,
+      p <- IOTasks.providerFile(sourceManaged / sourceDir,
                                 "TzdbZoneRulesProvider.scala",
                                 "java.time.zone"
            )

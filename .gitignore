@@ -21,6 +21,8 @@
 *.iml
 .metals/
 .bloop/
+.bsp/
+.vscode/
 /project/project/
 /project/target/
 shared/js/src/main/resources/
