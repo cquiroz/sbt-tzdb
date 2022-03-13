@@ -65,19 +65,18 @@ object TzdbPlugin extends AutoPlugin {
     Seq(
       generatedSourceDialect := {
         val neededFlags = Set("-indent", "-new-syntax", "-source:future")
-        if (scalaBinaryVersion.value == "3" && neededFlags.forall(scalacOptions.value.contains)) {
+        if (scalaBinaryVersion.value == "3" && neededFlags.forall(scalacOptions.value.contains))
           Dialect.Scala3Future
-        } else if (scalaBinaryVersion.value == "3" || scalacOptions.value.contains("-Xsource:3")) {
+        else if (scalaBinaryVersion.value == "3" || scalacOptions.value.contains("-Xsource:3"))
           Dialect.Scala3
-        } else {
+        else
           Dialect.Scala2
-        }
       },
       Compile / sourceGenerators += Def.task {
         tzdbCodeGen.value
       },
       tzdbCodeGen := {
-        lazy val dialect = generatedSourceDialect.value
+        lazy val dialect                                   = generatedSourceDialect.value
         val cacheLocation                                  = streams.value.cacheDirectory / "sbt-tzdb"
         val log                                            = streams.value.log
         val cachedActionFunction: Set[JFile] => Set[JFile] = FileFunction.cached(
@@ -115,7 +114,7 @@ object TzdbPlugin extends AutoPlugin {
 
     val sourceDir = tzdbPlatform match {
       case Platform.Js => s"${tzdbPlatform.name}/${dialect.name}"
-      case _ => tzdbPlatform.name
+      case _           => tzdbPlatform.name
     }
 
     val tzdbData: JFile = resourcesManaged / "tzdb"
