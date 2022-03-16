@@ -112,10 +112,7 @@ object TzdbPlugin extends AutoPlugin {
     import cats._
     import cats.syntax.all._
 
-    val sourceDir = tzdbPlatform match {
-      case Platform.Js => s"${tzdbPlatform.name}/${dialect.name}"
-      case _           => tzdbPlatform.name
-    }
+    val sourceDir = s"${tzdbPlatform.name}/${dialect.name}"
 
     val tzdbData: JFile = resourcesManaged / "tzdb"
     val ttbp            = IOTasks.copyProvider(
