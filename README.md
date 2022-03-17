@@ -1,10 +1,11 @@
 # sbt-tzdb
 
-Build a custom time zone database for `Scala.js` applications.
+Build a custom time zone database for `Scala.js` and `Scala Native` applications.
 
-`sbt-tzdb` is a code generation tool used to build a time zone db compatible with the `Scala.js` side of [scala-java-time](https://github.com/cquiroz/scala-java-time).
+`sbt-tzdb` is a code generation tool used to build a time zone db compatible with the `Scala.js` and `Scala Native` side of [scala-java-time](https://github.com/cquiroz/scala-java-time).
 
-Its main purpose is to let users build a custom version of tzdb, which has the minimal data your application needs reducing the size of the application. This is fairly important for `Scala.js` applications.
+Its main purpose is to let users build a custom version of tzdb, which has the minimal data your application needs reducing the size of the application.
+This is fairly important for `Scala.js` applications.
 
 # What does it do?
 
@@ -18,14 +19,14 @@ The full timezone databes is fairly large containing historical records for all 
 
 However, it is legal to have a smaller database with only the time zones of your interest. As it is impossible to publish all possible combinations, this plugin lets you generate dynamically the database for your application.
 
-By restricting the avaliable timezones you can reduce your js size up to several megabytes on `fastOptJS`.
+By restricting the available timezones you can reduce your js size up to several megabytes on `fastOptJS`.
 
 ## Usage Instructions
 
 add the plugin dependency to `project/plugins.sbt` for sbt 1.1.x
 
 ```scala
-addSbtPlugin("io.github.cquiroz" % "sbt-tzdb" % "0.3.1")
+addSbtPlugin("io.github.cquiroz" % "sbt-tzdb" % "3.0.0")
 ```
 
 The plugin currently supports sbt 1.1.x.
@@ -39,11 +40,12 @@ The you need to enable the plugin in your project e.g.:
 Note that the plugin should be only enabled for js projects but it is not enforced. For cross projects you should do:
 
 ```scala
-lazy val lib = crossProject(JVMPlatform, JSPlatform)
+lazy val lib = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   ...
 
 lazy val libJVM = lib.jvm
 lazy val libJS  = lib.js.enablePlugins(TzdbPlugin)
+lazy val libNative  = lib.native.enablePlugins(TzdbPlugin)
 ```
 
 This only makes sense if you add `scala-java-time` as a dependency
