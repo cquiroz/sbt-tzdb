@@ -1,7 +1,7 @@
 import sbt._
 import sbt.io.Using
 
-val scalaVer = "2.12.15"
+val scalaVer = "2.12.16"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -47,7 +47,7 @@ lazy val sbt_tzdb = project
     libraryDependencies ++= Seq(
       "io.github.cquiroz" %% "kuyfi"            % "1.3.0",
       "org.apache.commons" % "commons-compress" % "1.21",
-      "com.eed3si9n"      %% "gigahorse-okhttp" % "0.6.0",
+      "com.eed3si9n"      %% "gigahorse-okhttp" % "0.7.0",
       "org.typelevel"     %% "cats-core"        % "2.8.0",
       "org.typelevel"     %% "cats-effect"      % "2.5.5"
     ),
