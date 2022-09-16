@@ -6,6 +6,7 @@ import sbt.util.Logger
 import sbt.util.CacheImplicits._
 import Keys._
 import cats.effect
+import cats.effect.unsafe.implicits._
 
 object TzdbPlugin extends AutoPlugin {
   sealed trait TZDBVersion {
