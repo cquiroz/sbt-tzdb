@@ -26,7 +26,7 @@ By restricting the available timezones you can reduce your js size up to several
 add the plugin dependency to `project/plugins.sbt` for sbt 1.1.x
 
 ```scala
-addSbtPlugin("io.github.cquiroz" % "sbt-tzdb" % "3.0.0")
+addSbtPlugin("io.github.cquiroz" % "sbt-tzdb" % "4.2.0") // Or latest version; check release tags
 ```
 
 The plugin currently supports sbt 1.1.x.
@@ -52,7 +52,7 @@ This only makes sense if you add `scala-java-time` as a dependency
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC1"
+  "io.github.cquiroz" %%% "scala-java-time" % "2.5.0" // Or latest version; check projects release tags
 )
 ```
 
