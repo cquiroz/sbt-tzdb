@@ -1,7 +1,7 @@
 import sbt._
 import sbt.io.Using
 
-val scalaVer = "2.12.17"
+val scalaVer = "2.12.18"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -45,7 +45,7 @@ lazy val sbt_tzdb = project
   .settings(
     name := "sbt-tzdb",
     libraryDependencies ++= Seq(
-      "io.github.cquiroz" %% "kuyfi"            % "1.5.1",
+      "io.github.cquiroz" %% "kuyfi"            % "1.5.2",
       "org.apache.commons" % "commons-compress" % "1.22",
       "com.eed3si9n"      %% "gigahorse-okhttp" % "0.7.0",
       "org.typelevel"     %% "cats-core"        % "2.9.0",
