@@ -3,9 +3,9 @@ name := "tzdb"
 enablePlugins(TzdbPlugin)
 enablePlugins(ScalaJSPlugin)
 
-scalaVersion := "2.13.1"
+scalaVersion := "2.13.14"
 
-crossScalaVersions := Seq("2.13.1", "2.12.10")
+crossScalaVersions := Seq("2.13.14", "2.12.10", "3.4.1")
 
 tzdbPlatform := TzdbPlugin.Platform.Jvm
 
@@ -20,6 +20,6 @@ lazy val commonSettings = Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.portable-scala" %%% "portable-scala-reflect" % "1.0.0",
-  "io.github.cquiroz" %%% "scala-java-time" % "2.0.0-RC3"
+  ("org.portable-scala" %%% "portable-scala-reflect" % "1.1.2").cross(CrossVersion.for3Use2_13),
+  "io.github.cquiroz"  %%% "scala-java-time"        % "2.5.0"
 )

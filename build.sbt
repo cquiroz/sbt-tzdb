@@ -45,7 +45,7 @@ lazy val sbt_tzdb = project
   .settings(
     name := "sbt-tzdb",
     libraryDependencies ++= Seq(
-      "io.github.cquiroz" %% "kuyfi"            % "1.5.2",
+      "io.github.cquiroz" %% "kuyfi"            % "1.5.3",
       "org.apache.commons" % "commons-compress" % "1.24.0",
       "com.eed3si9n"      %% "gigahorse-okhttp" % "0.7.0",
       "org.typelevel"     %% "cats-core"        % "2.10.0",
