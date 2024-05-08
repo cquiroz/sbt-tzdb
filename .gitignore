@@ -33,3 +33,4 @@ tzdb/js/src/main/resources/
 /threetenbp.iml
 .metaserver/
 project/metals.sbt
+.direnv/
