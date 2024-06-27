@@ -56,6 +56,26 @@ libraryDependencies ++= Seq(
 )
 ```
 
+If you want TZDB to be in multiple cross projects then include the plugin in a parent one which the other projects depend upon otherwise you may encounter intermittent
+[compilation issues](https://github.com/cquiroz/sbt-tzdb/issues/270).
+
+```scala
+  // we have created the "modules/tzdb" directory inside the project but this is up to how you want to 
+  // organize the modules of your project
+  lazy val libTzdb = crossProject(JVMPlatform, JSPlatform)
+      .in(file("modules/tzdb"))
+      .settings(
+        name := "tzdb",
+        dbVersion := TzdbPlugin.Version("2024a")
+      )
+      .jsConfigure(
+        _.enablePlugins(TzdbPlugin)
+      )
+
+  lazy val libClient = crossProject(JVMPlatform, JSPlatform)
+        .dependsOn(libTzdb.js)
+```
+
 ## Main Tasks
 
 The plugin attaches to the build and adds a custom code generation task which will build a compatible timezone
