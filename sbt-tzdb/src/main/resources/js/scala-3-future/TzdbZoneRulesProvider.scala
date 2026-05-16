@@ -92,9 +92,8 @@ final class TzdbZoneRulesProvider extends ZoneRulesProvider:
           .get(actualRegion)
           .map(i => ZoneRules.of(ZoneOffset.ofTotalSeconds(i))))
       .map { z =>
-        val r = new ZoneMap[String, ZoneRules]
+        val r = new java.util.TreeMap[String, ZoneRules]
         r.put(version, z)
         r
       }
       .getOrElse(throw new DateTimeException(s"TimeZone Region $actualRegion unknown"))
-

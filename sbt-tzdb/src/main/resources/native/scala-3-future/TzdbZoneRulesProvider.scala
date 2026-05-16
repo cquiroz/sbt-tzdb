@@ -40,7 +40,7 @@ final class TzdbZoneRulesProvider extends ZoneRulesProvider:
         fixedZones
           .get(actualRegion))
       .map { z =>
-        val r = new ZoneMap[String, ZoneRules]
+        val r = new java.util.TreeMap[String, ZoneRules]
         r.put(version, z)
         r
       }
