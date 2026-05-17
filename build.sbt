@@ -44,7 +44,7 @@ lazy val sbt_tzdb = project
     name := "sbt-tzdb",
     libraryDependencies ++= Seq(
       "io.github.cquiroz" %% "kuyfi"            % "1.6.0",
-      "org.apache.commons" % "commons-compress" % "1.24.0"
+      "org.apache.commons" % "commons-compress" % "1.28.0"
     ),
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++

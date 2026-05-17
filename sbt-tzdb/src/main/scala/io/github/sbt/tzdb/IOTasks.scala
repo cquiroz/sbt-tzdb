@@ -136,7 +136,7 @@ object IOTasks {
       )
     )
 
-    var tarEntry = tarIn.getNextTarEntry()
+    var tarEntry = tarIn.getNextEntry()
 
     val topDir = tarEntry.getName().split("[/\\\\]")(0)
 
@@ -157,7 +157,7 @@ object IOTasks {
         }
         bout.close()
       }
-      tarEntry = tarIn.getNextTarEntry()
+      tarEntry = tarIn.getNextEntry()
     }
     tarIn.close()
 
