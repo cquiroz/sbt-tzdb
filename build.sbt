@@ -1,16 +1,15 @@
 import sbt._
 import sbt.io.Using
 
-val scalaVer = "2.12.20"
+val scalaVer = "2.12.21"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
-
-resolvers in Global += Resolver.sonatypeRepo("public")
 
 pluginCrossBuild / sbtVersion := "1.2.8"
 
 inThisBuild(
   List(
+    scalaVersion := scalaVer,
     organization := "io.github.cquiroz",
     homepage := Some(url("https://github.com/cquiroz/sbt-tzdb")),
     licenses := Seq("BSD 3-Clause License" -> url("https://opensource.org/licenses/BSD-3-Clause")),
@@ -34,7 +33,6 @@ lazy val commonSettings = Seq(
   name := "sbt-tzdb",
   description := "Sbt plugin to build custom timezone databases",
   organization := "io.github.cquiroz",
-  scalaVersion := scalaVer,
   javaOptions ++= Seq("-Dfile.encoding=UTF8")
 )
 
@@ -45,11 +43,8 @@ lazy val sbt_tzdb = project
   .settings(
     name := "sbt-tzdb",
     libraryDependencies ++= Seq(
-      "io.github.cquiroz" %% "kuyfi"            % "1.5.3",
-      "org.apache.commons" % "commons-compress" % "1.24.0",
-      "com.eed3si9n"      %% "gigahorse-okhttp" % "0.7.0",
-      "org.typelevel"     %% "cats-core"        % "2.12.0",
-      "org.typelevel"     %% "cats-effect"      % "3.5.7"
+      "io.github.cquiroz" %% "kuyfi"            % "1.6.0",
+      "org.apache.commons" % "commons-compress" % "1.28.0"
     ),
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++
