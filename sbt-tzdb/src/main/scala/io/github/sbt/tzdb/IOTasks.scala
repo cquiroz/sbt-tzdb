@@ -2,6 +2,7 @@ package io.github.sbt.tzdb
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import java.io._
+import java.net.{ HttpURLConnection, URL }
 import java.nio.file.{ Files, StandardCopyOption }
 import cats.syntax.all._
 import scala.collection.JavaConverters._
@@ -20,7 +21,7 @@ object IOTasks {
     val tzdbTarball = resourcesDir / "tzdb.tar.gz"
     if (!tzdbDir.exists) {
       val url =
-        s"http://www.iana.org/time-zones/repository/${tzdbVersion.path}.tar.gz"
+        s"https://www.iana.org/time-zones/repository/${tzdbVersion.path}.tar.gz"
       for {
         _ <- cats.effect.IO(
                log.info(s"tzdb data missing. downloading ${tzdbVersion.id} version to $tzdbDir...")
@@ -122,18 +123,19 @@ object IOTasks {
       destinationFile
     }
 
-  def download(url: String, to: File) =
+  def download(url: String, to: File): cats.effect.IO[File] =
     cats.effect.IO {
-      import gigahorse.*
-      import support.okhttp.Gigahorse
-
-      import scala.concurrent.*
-      import duration.*
-      Gigahorse.withHttp(gigahorse.Config()) { http =>
-        val r = Gigahorse.url(url)
-        val f = http.download(r, to)
-        Await.result(f, 120.seconds)
+      val conn = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
+      conn.setConnectTimeout(30000)
+      conn.setReadTimeout(120000)
+      conn.setInstanceFollowRedirects(true)
+      val in   = conn.getInputStream
+      try Files.copy(in, to.toPath, StandardCopyOption.REPLACE_EXISTING)
+      finally {
+        in.close()
+        conn.disconnect()
       }
+      to
     }
 
   def gunzipTar(tarFile: File, dest: File): cats.effect.IO[String] =
