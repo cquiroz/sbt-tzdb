@@ -43,10 +43,8 @@ lazy val sbt_tzdb = project
   .settings(
     name := "sbt-tzdb",
     libraryDependencies ++= Seq(
-      "io.github.cquiroz" %% "kuyfi"            % "1.5.3",
-      "org.apache.commons" % "commons-compress" % "1.24.0",
-      "org.typelevel"     %% "cats-core"        % "2.12.0",
-      "org.typelevel"     %% "cats-effect"      % "3.5.7"
+      "io.github.cquiroz" %% "kuyfi"            % "1.6.0",
+      "org.apache.commons" % "commons-compress" % "1.24.0"
     ),
     scriptedLaunchOpts := {
       scriptedLaunchOpts.value ++

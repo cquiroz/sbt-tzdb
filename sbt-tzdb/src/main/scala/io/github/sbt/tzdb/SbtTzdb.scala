@@ -5,8 +5,6 @@ import sbt._
 import sbt.util.Logger
 import sbt.util.CacheImplicits._
 import Keys._
-import cats.effect
-import cats.effect.unsafe.implicits._
 
 object TzdbPlugin extends AutoPlugin {
   sealed trait TZDBVersion {
@@ -109,46 +107,49 @@ object TzdbPlugin extends AutoPlugin {
     dialect:          Dialect,
     log:              Logger
   ): Set[JFile] = {
-
-    import cats._
-    import cats.syntax.all._
-
     val sourceDir = s"${tzdbPlatform.name}/${dialect.name}"
 
     val tzdbData: JFile = resourcesManaged / "tzdb"
-    val ttbp            = IOTasks.copyProvider(
-      sourceManaged,
-      sourceDir,
-      "TzdbZoneRulesProvider.scala",
-      "org.threeten.bp.zone",
-      false
-    )
-    val jt              = IOTasks.copyProvider(
-      sourceManaged,
-      sourceDir,
-      "TzdbZoneRulesProvider.scala",
-      "java.time.zone",
-      true
-    )
-    val providerCopy    = if (includeTTBP) List(ttbp, jt) else List(jt)
-    (for {
-      _ <- IOTasks.downloadTZDB(log, resourcesManaged, dbVersion)
-      // Use it to detect if files have been already generated
-      p <- IOTasks.providerFile(sourceManaged / sourceDir,
-                                "TzdbZoneRulesProvider.scala",
-                                "java.time.zone"
-           )
-      e <- effect.IO(p.exists)
-      j <- if (e) effect.IO(List(p)) else providerCopy.sequence
-      f <- if (e) IOTasks.tzDataSources(sourceManaged, includeTTBP).map(_.map(_._3))
-           else
-             IOTasks.generateTZDataSources(sourceManaged,
-                                           tzdbData,
-                                           log,
-                                           includeTTBP,
-                                           tzdbPlatform,
-                                           zonesFilter
-             )
-    } yield (j ::: f).toSet).unsafeRunSync
+
+    IOTasks.downloadTZDB(log, resourcesManaged, dbVersion)
+
+    val p =
+      IOTasks.providerFile(sourceManaged / sourceDir,
+                           "TzdbZoneRulesProvider.scala",
+                           "java.time.zone"
+      )
+
+    val j =
+      if (p.exists) List(p)
+      else {
+        val ttbp = IOTasks.copyProvider(
+          sourceManaged,
+          sourceDir,
+          "TzdbZoneRulesProvider.scala",
+          "org.threeten.bp.zone",
+          false
+        )
+        val jt   = IOTasks.copyProvider(
+          sourceManaged,
+          sourceDir,
+          "TzdbZoneRulesProvider.scala",
+          "java.time.zone",
+          true
+        )
+        if (includeTTBP) List(ttbp, jt) else List(jt)
+      }
+
+    val f =
+      if (p.exists) IOTasks.tzDataSources(sourceManaged, includeTTBP).map(_._3)
+      else
+        IOTasks.generateTZDataSources(sourceManaged,
+                                      tzdbData,
+                                      log,
+                                      includeTTBP,
+                                      tzdbPlatform,
+                                      zonesFilter
+        )
+
+    (j ::: f).toSet
   }
 }
