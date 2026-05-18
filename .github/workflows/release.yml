@@ -9,12 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.1
       - uses: olafurpg/setup-scala@v14
-      - name: Debug GPG
-        run: |
-          echo "$PGP_SECRET" | base64 -d | gpg --import --batch --yes
-          gpg --list-secret-keys
-        env:
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
       - name: Publish
         run: sbt clean ci-release
         env:
