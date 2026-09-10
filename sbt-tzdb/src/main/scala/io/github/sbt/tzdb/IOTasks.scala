@@ -2,7 +2,7 @@ package io.github.sbt.tzdb
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import java.io._
-import java.net.{ HttpURLConnection, URL }
+import java.net.{ HttpURLConnection, URI }
 import java.nio.file.{ Files, StandardCopyOption }
 import scala.collection.JavaConverters._
 import sbt._
@@ -112,7 +112,7 @@ object IOTasks {
   }
 
   def download(url: String, to: File): File = {
-    val conn = new URL(url).openConnection().asInstanceOf[HttpURLConnection]
+    val conn = URI.create(url).toURL.openConnection().asInstanceOf[HttpURLConnection]
     conn.setConnectTimeout(30000)
     conn.setReadTimeout(120000)
     conn.setInstanceFollowRedirects(true)
