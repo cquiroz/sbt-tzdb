@@ -89,6 +89,19 @@ The plugin attaches to the build and adds a custom code generation task which wi
 zonesFilter := {(z: String) => z == "America/Santiago" || z == "Pacific/Honolulu"},
 ```
 
+* `tzdbLocalDir`: An already-unpacked IANA tzdb directory to generate from. When set, the
+  plugin reads that directory and downloads nothing, which is what lets the build run with
+  no network access — a Nix or Bazel sandbox, an air-gapped machine, a hermetic CI runner.
+  `dbVersion` is unused in that case, so pin the version wherever the directory comes from.
+
+```scala
+tzdbLocalDir := Some(file("/path/to/tzdata2024a"))
+```
+
+  Note this REPLACES the download rather than seeding it: if the directory is missing the
+  build fails instead of quietly fetching, so a misconfigured path cannot pass on a
+  networked machine and then fail in the sandbox it was meant for.
+
 ## Warning
 
 * This is still an experimental plugin, use with care

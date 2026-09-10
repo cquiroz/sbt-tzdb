@@ -1,0 +1,64 @@
+# A MINIMAL excerpt of the IANA "europe" file (release 2019c), carrying only
+# Europe/Warsaw and the four rule sets it references. See README in this directory.
+#
+# This file is in the public domain, so clarified as of 2009-05-17 by Arthur David Olson.
+
+Rule	EU	1977	1980	-	Apr	Sun>=1	 1:00u	1:00	S
+Rule	EU	1977	only	-	Sep	lastSun	 1:00u	0	-
+Rule	EU	1978	only	-	Oct	 1	 1:00u	0	-
+Rule	EU	1979	1995	-	Sep	lastSun	 1:00u	0	-
+Rule	EU	1981	max	-	Mar	lastSun	 1:00u	1:00	S
+Rule	EU	1996	max	-	Oct	lastSun	 1:00u	0	-
+Rule	W-Eur	1977	1980	-	Apr	Sun>=1	 1:00s	1:00	S
+Rule	W-Eur	1977	only	-	Sep	lastSun	 1:00s	0	-
+Rule	W-Eur	1978	only	-	Oct	 1	 1:00s	0	-
+Rule	W-Eur	1979	1995	-	Sep	lastSun	 1:00s	0	-
+Rule	W-Eur	1981	max	-	Mar	lastSun	 1:00s	1:00	S
+Rule	W-Eur	1996	max	-	Oct	lastSun	 1:00s	0	-
+Rule	C-Eur	1916	only	-	Apr	30	23:00	1:00	S
+Rule	C-Eur	1916	only	-	Oct	 1	 1:00	0	-
+Rule	C-Eur	1917	1918	-	Apr	Mon>=15	 2:00s	1:00	S
+Rule	C-Eur	1917	1918	-	Sep	Mon>=15	 2:00s	0	-
+Rule	C-Eur	1940	only	-	Apr	 1	 2:00s	1:00	S
+Rule	C-Eur	1942	only	-	Nov	 2	 2:00s	0	-
+Rule	C-Eur	1943	only	-	Mar	29	 2:00s	1:00	S
+Rule	C-Eur	1943	only	-	Oct	 4	 2:00s	0	-
+Rule	C-Eur	1944	1945	-	Apr	Mon>=1	 2:00s	1:00	S
+Rule	C-Eur	1944	only	-	Oct	 2	 2:00s	0	-
+Rule	C-Eur	1945	only	-	Sep	16	 2:00s	0	-
+Rule	C-Eur	1977	1980	-	Apr	Sun>=1	 2:00s	1:00	S
+Rule	C-Eur	1977	only	-	Sep	lastSun	 2:00s	0	-
+Rule	C-Eur	1978	only	-	Oct	 1	 2:00s	0	-
+Rule	C-Eur	1979	1995	-	Sep	lastSun	 2:00s	0	-
+Rule	C-Eur	1981	max	-	Mar	lastSun	 2:00s	1:00	S
+Rule	C-Eur	1996	max	-	Oct	lastSun	 2:00s	0	-
+Rule	Poland	1918	1919	-	Sep	16	2:00s	0	-
+Rule	Poland	1919	only	-	Apr	15	2:00s	1:00	S
+Rule	Poland	1944	only	-	Apr	 3	2:00s	1:00	S
+Rule	Poland	1944	only	-	Oct	 4	2:00	0	-
+Rule	Poland	1945	only	-	Apr	29	0:00	1:00	S
+Rule	Poland	1945	only	-	Nov	 1	0:00	0	-
+Rule	Poland	1946	only	-	Apr	14	0:00s	1:00	S
+Rule	Poland	1946	only	-	Oct	 7	2:00s	0	-
+Rule	Poland	1947	only	-	May	 4	2:00s	1:00	S
+Rule	Poland	1947	1949	-	Oct	Sun>=1	2:00s	0	-
+Rule	Poland	1948	only	-	Apr	18	2:00s	1:00	S
+Rule	Poland	1949	only	-	Apr	10	2:00s	1:00	S
+Rule	Poland	1957	only	-	Jun	 2	1:00s	1:00	S
+Rule	Poland	1957	1958	-	Sep	lastSun	1:00s	0	-
+Rule	Poland	1958	only	-	Mar	30	1:00s	1:00	S
+Rule	Poland	1959	only	-	May	31	1:00s	1:00	S
+Rule	Poland	1959	1961	-	Oct	Sun>=1	1:00s	0	-
+Rule	Poland	1960	only	-	Apr	 3	1:00s	1:00	S
+Rule	Poland	1961	1964	-	May	lastSun	1:00s	1:00	S
+Rule	Poland	1962	1964	-	Sep	lastSun	1:00s	0	-
+
+Zone	Europe/Warsaw	1:24:00 -	LMT	1880
+			1:24:00	-	WMT	1915 Aug  5 # Warsaw Mean Time
+			1:00	C-Eur	CE%sT	1918 Sep 16  3:00
+			2:00	Poland	EE%sT	1922 Jun
+			1:00	Poland	CE%sT	1940 Jun 23  2:00
+			1:00	C-Eur	CE%sT	1944 Oct
+			1:00	Poland	CE%sT	1977
+			1:00	W-Eur	CE%sT	1988
+			1:00	EU	CE%sT

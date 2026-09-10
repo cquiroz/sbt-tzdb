@@ -39,16 +39,20 @@ object TzdbPlugin extends AutoPlugin {
     /*
      * Settings
      */
-    val zonesFilter                        = settingKey[String => Boolean]("Filter for zones")
-    val dbVersion                          = settingKey[TZDBVersion]("Version of the tzdb")
+    val zonesFilter                             = settingKey[String => Boolean]("Filter for zones")
+    val dbVersion                               = settingKey[TZDBVersion]("Version of the tzdb")
     // The fact that scalacOptions is a Task forces this to also be a task.
-    val generatedSourceDialect             = taskKey[Dialect]("The Scala dialect of the generated sources.")
-    val tzdbCodeGen                        =
+    val generatedSourceDialect                  = taskKey[Dialect]("The Scala dialect of the generated sources.")
+    val tzdbCodeGen                             =
       taskKey[Seq[JFile]]("Generate scala.js compatible database of tzdb data")
-    val includeTTBP: SettingKey[Boolean]   =
+    val includeTTBP: SettingKey[Boolean]        =
       settingKey[Boolean]("Include also a provider for threeten bp")
-    val tzdbPlatform: SettingKey[Platform] = settingKey[Platform](
+    val tzdbPlatform: SettingKey[Platform]      = settingKey[Platform](
       "The generated code is platform specific. Specify what is the target platform."
+    )
+    val tzdbLocalDir: SettingKey[Option[JFile]] = settingKey[Option[JFile]](
+      "An already-unpacked IANA tzdb directory to generate from. When set, nothing is " +
+        "downloaded and `dbVersion` is unused. For builds that have no network access."
     )
   }
 
@@ -58,7 +62,8 @@ object TzdbPlugin extends AutoPlugin {
     zonesFilter := { case _ => true },
     dbVersion := LatestVersion,
     includeTTBP := false,
-    tzdbPlatform := Platform.Js
+    tzdbPlatform := Platform.Js,
+    tzdbLocalDir := None
   )
   override val projectSettings    =
     Seq(
@@ -87,6 +92,7 @@ object TzdbPlugin extends AutoPlugin {
             resourcesManaged = (Compile / resourceManaged).value,
             zonesFilter = zonesFilter.value,
             dbVersion = dbVersion.value,
+            tzdbLocalDir = tzdbLocalDir.value,
             includeTTBP = includeTTBP.value,
             tzdbPlatform = tzdbPlatform.value,
             dialect = dialect,
@@ -102,6 +108,7 @@ object TzdbPlugin extends AutoPlugin {
     resourcesManaged: JFile,
     zonesFilter:      String => Boolean,
     dbVersion:        TZDBVersion,
+    tzdbLocalDir:     Option[JFile],
     includeTTBP:      Boolean,
     tzdbPlatform:     Platform,
     dialect:          Dialect,
@@ -109,9 +116,20 @@ object TzdbPlugin extends AutoPlugin {
   ): Set[JFile] = {
     val sourceDir = s"${tzdbPlatform.name}/${dialect.name}"
 
-    val tzdbData: JFile = resourcesManaged / "tzdb"
-
-    IOTasks.downloadTZDB(log, resourcesManaged, dbVersion)
+    // A local directory REPLACES the download rather than seeding it: a build that asked
+    // for local data and silently fetched instead would pass on a networked machine and
+    // fail in the sandbox it was configured for, which is the failure this setting exists
+    // to prevent.
+    val tzdbData: JFile = tzdbLocalDir match {
+      case Some(dir) =>
+        if (!dir.exists)
+          sys.error(s"tzdbLocalDir is set to $dir, which does not exist.")
+        log.debug(s"using local tzdb data at $dir")
+        dir
+      case None      =>
+        IOTasks.downloadTZDB(log, resourcesManaged, dbVersion)
+        resourcesManaged / "tzdb"
+    }
 
     val p =
       IOTasks.providerFile(sourceManaged / sourceDir,
