@@ -39,8 +39,8 @@ object TzdbPlugin extends AutoPlugin {
     /*
      * Settings
      */
-    val zonesFilter                             = settingKey[String => Boolean]("Filter for zones")
-    val dbVersion                               = settingKey[TZDBVersion]("Version of the tzdb")
+    val zonesFilter = settingKey[String => Boolean]("Filter for zones")
+    val dbVersion   = settingKey[TZDBVersion]("Version of the tzdb")
 
     @transient val generatedSourceDialect       =
       taskKey[Dialect]("The Scala dialect of the generated sources.")
