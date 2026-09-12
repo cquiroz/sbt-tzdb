@@ -19,7 +19,7 @@
           imports = [ typelevel-nix.typelevelShell ];
           typelevelShell = {
             nodejs.enable = true;
-            jdk.package = pkgs.jdk8;
+            jdk.package = pkgs.jdk17;
           };
         };
       }
