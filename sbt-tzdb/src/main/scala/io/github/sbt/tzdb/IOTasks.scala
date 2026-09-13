@@ -4,7 +4,6 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import java.io._
 import java.net.{ HttpURLConnection, URI }
 import java.nio.file.{ Files, StandardCopyOption }
-import scala.collection.JavaConverters._
 import sbt._
 import kuyfi.TZDBCodeGenerator
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
@@ -101,32 +100,33 @@ object IOTasks {
     destinationFile.delete()
     val tempFile            = File.createTempFile("tzdb", "tzdb")
     Files.copy(stream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    val replace             = (l: String) => if (isJava) replacementsJava(l) else replacements(l)
     val replaced            =
-      Files
-        .readAllLines(tempFile.toPath(), StandardCharsets.UTF_8)
-        .asScala
-        .map(if (isJava) replacementsJava else replacements)
-    Files.write(destinationFile.toPath(), replaced.asJava, StandardCharsets.UTF_8)
+      new String(Files.readAllBytes(tempFile.toPath()), StandardCharsets.UTF_8).linesIterator
+        .map(replace)
+        .mkString("", "\n", "\n")
+    Files.write(destinationFile.toPath(), replaced.getBytes(StandardCharsets.UTF_8))
     tempFile.delete()
     destinationFile
   }
 
-  def download(url: String, to: File): File = {
+  def download(url: String, to: File): Unit = {
     val conn = URI.create(url).toURL.openConnection().asInstanceOf[HttpURLConnection]
     conn.setConnectTimeout(30000)
     conn.setReadTimeout(120000)
     conn.setInstanceFollowRedirects(true)
     val in   = conn.getInputStream
-    try Files.copy(in, to.toPath, StandardCopyOption.REPLACE_EXISTING)
-    finally {
+    try {
+      Files.copy(in, to.toPath, StandardCopyOption.REPLACE_EXISTING)
+      ()
+    } finally {
       in.close()
       conn.disconnect()
     }
-    to
   }
 
-  def gunzipTar(tarFile: File, dest: File): String = {
-    dest.mkdirs
+  def gunzipTar(tarFile: File, dest: File): Unit = {
+    dest.mkdirs()
 
     val tarIn = new TarArchiveInputStream(
       new GzipCompressorInputStream(
@@ -137,8 +137,6 @@ object IOTasks {
     )
 
     var tarEntry = tarIn.getNextEntry()
-
-    val topDir = tarEntry.getName().split("[/\\\\]")(0)
 
     while (tarEntry != null) {
       val file = new File(dest, tarEntry.getName())
@@ -160,8 +158,6 @@ object IOTasks {
       tarEntry = tarIn.getNextEntry()
     }
     tarIn.close()
-
-    topDir
   }
 
 }

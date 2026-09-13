@@ -21,17 +21,17 @@ object TzdbPlugin extends AutoPlugin {
   }
 
   sealed abstract class Platform(val name: String) extends Product with Serializable
-  final object Platform {
-    final case object Jvm    extends Platform("jvm")
-    final case object Js     extends Platform("js")
-    final case object Native extends Platform("native")
+  object Platform {
+    case object Jvm    extends Platform("jvm")
+    case object Js     extends Platform("js")
+    case object Native extends Platform("native")
   }
 
   sealed abstract class Dialect(val name: String) extends Product with Serializable
-  final object Dialect {
-    final case object Scala2       extends Dialect("scala-2")
-    final case object Scala3       extends Dialect("scala-3")
-    final case object Scala3Future extends Dialect("scala-3-future")
+  object Dialect {
+    case object Scala2       extends Dialect("scala-2")
+    case object Scala3       extends Dialect("scala-3")
+    case object Scala3Future extends Dialect("scala-3-future")
   }
 
   object autoImport {
@@ -39,11 +39,12 @@ object TzdbPlugin extends AutoPlugin {
     /*
      * Settings
      */
-    val zonesFilter                             = settingKey[String => Boolean]("Filter for zones")
-    val dbVersion                               = settingKey[TZDBVersion]("Version of the tzdb")
-    // The fact that scalacOptions is a Task forces this to also be a task.
-    val generatedSourceDialect                  = taskKey[Dialect]("The Scala dialect of the generated sources.")
-    val tzdbCodeGen                             =
+    val zonesFilter = settingKey[String => Boolean]("Filter for zones")
+    val dbVersion   = settingKey[TZDBVersion]("Version of the tzdb")
+
+    @transient val generatedSourceDialect       =
+      taskKey[Dialect]("The Scala dialect of the generated sources.")
+    @transient val tzdbCodeGen                  =
       taskKey[Seq[JFile]]("Generate scala.js compatible database of tzdb data")
     val includeTTBP: SettingKey[Boolean]        =
       settingKey[Boolean]("Include also a provider for threeten bp")

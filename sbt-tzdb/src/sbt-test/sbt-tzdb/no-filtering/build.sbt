@@ -3,9 +3,9 @@ name := "tzdb"
 enablePlugins(TzdbPlugin)
 enablePlugins(ScalaJSPlugin)
 
-scalaVersion := "2.13.14"
+scalaVersion := "2.13.18"
 
-crossScalaVersions := Seq("2.13.14", "2.12.10", "3.4.1")
+crossScalaVersions := Seq("2.13.18", "2.12.21", "3.3.6")
 
 val zonesFilterFn = {(z: String) => z == "America/Santiago" || z == "Pacific/Honolulu"}
 
@@ -21,6 +21,7 @@ lazy val commonSettings = Seq(
   )
 )
 
-libraryDependencies ++= Seq(
-  "io.github.cquiroz" %%% "scala-java-time" % "2.5.0"
-)
+libraryDependencies += {
+  val sjs = if (sbtVersion.value.startsWith("2.")) "scala-java-time" else "scala-java-time_sjs1"
+  "io.github.cquiroz" %% sjs % "2.5.0"
+}

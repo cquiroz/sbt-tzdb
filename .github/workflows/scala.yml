@@ -6,23 +6,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        # 2.12 builds the sbt 1.x plugin, Scala 3 the sbt 2.x one.
+        scala: [2.12.21, 3.8.4]
+
     steps:
       - uses: actions/checkout@v7.0.1
-      - name: Set up JDK 1.8
-        uses: olafurpg/setup-scala@v14
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          java-version: 1.8
-      - name: Cache Coursier
-        uses: actions/cache@v4.3.0
-        with:
-          path: ~/.cache/coursier
-          key: sbt-coursier-cache
-      - name: Cache SBT
-        uses: actions/cache@v4.3.0
-        with:
-          path: ~/.sbt
-          key: sbt-${{ hashFiles('**/build.sbt') }}
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
       - name: Checking your code format
         run: sbt scalafmtCheckAll
       - name: Run tests
-        run: sbt clean sbt-tzdb/scripted
+        run: sbt "++${{ matrix.scala }}" clean sbt-tzdb/scripted
