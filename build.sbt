@@ -3,7 +3,7 @@ import sbt.io.Using
 
 // The sbt 1.x leg builds on 2.12, the sbt 2.x leg on Scala 3, from a single source tree.
 val scala212 = "2.12.21"
-val scala3   = "3.8.4"
+val scala3   = "3.9.0"
 
 val sbt1 = "1.10.2"
 val sbt2 = "2.0.8"
