@@ -161,13 +161,7 @@ object TzdbPlugin extends AutoPlugin {
     val f =
       if (p.exists) IOTasks.tzDataSources(sourceManaged, includeTTBP).map(_._3)
       else
-        IOTasks.generateTZDataSources(sourceManaged,
-                                      tzdbData,
-                                      log,
-                                      includeTTBP,
-                                      tzdbPlatform,
-                                      zonesFilter
-        )
+        IOTasks.generateTZDataSources(sourceManaged, tzdbData, log, includeTTBP, zonesFilter)
 
     (j ::: f).toSet
   }

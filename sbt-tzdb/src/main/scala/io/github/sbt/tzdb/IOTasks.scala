@@ -44,25 +44,18 @@ object IOTasks {
   }
 
   def generateTZDataSources(
-    base:         File,
-    data:         File,
-    log:          Logger,
-    includeTTBP:  Boolean,
-    tzdbPlatform: TzdbPlugin.Platform,
-    zonesFilter:  String => Boolean
+    base:        File,
+    data:        File,
+    log:         Logger,
+    includeTTBP: Boolean,
+    zonesFilter: String => Boolean
   ): List[File] = {
     val paths = tzDataSources(base, includeTTBP)
     log.info(s"Generating tzdb from db at $data to $base")
     paths.foreach(t => t._3.getParentFile().mkdirs())
     paths.map { p =>
-      tzdbPlatform match {
-        case TzdbPlugin.Platform.Js =>
-          import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator.*
-          TZDBCodeGenerator.exportAll(data, p._3, p._1, p._2, zonesFilter)
-        case _                      =>
-          import kuyfi.TZDBCodeGenerator.PureTreeGenerator.*
-          TZDBCodeGenerator.exportAll(data, p._3, p._1, p._2, zonesFilter)
-      }
+      import kuyfi.TZDBCodeGenerator.PureTreeGenerator.*
+      TZDBCodeGenerator.exportAll(data, p._3, p._1, p._2, zonesFilter)
     }
   }
 
