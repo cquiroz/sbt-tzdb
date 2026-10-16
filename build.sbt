@@ -5,8 +5,8 @@ import sbt.io.Using
 val scala212 = "2.12.21"
 val scala3   = "3.8.4"
 
-val sbt1 = "1.10.2"
-val sbt2 = "2.0.8"
+val sbt1 = "1.13.0"
+val sbt2 = "2.0.10"
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
