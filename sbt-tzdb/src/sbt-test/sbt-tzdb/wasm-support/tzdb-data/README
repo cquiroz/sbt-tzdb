@@ -1,0 +1,11 @@
+A minimal IANA tzdb fixture, checked in so the local-dir test can generate without
+network access.
+
+`europe` is an excerpt of the real 2019c file carrying only Europe/Warsaw and the four
+rule sets it references (C-Eur, Poland, W-Eur, EU) — 2.7 KB rather than the 176 KB
+original. The other files kuyfi parses are present but empty: zonesFilter keeps only
+Europe/Warsaw, and an empty region file is what the generator does with a region it
+does not need.
+
+Small on purpose. It still exercises the real path: generating from it produces ~13 KB
+of zone rules with both the CET and CEST offsets and the full DST transition history.

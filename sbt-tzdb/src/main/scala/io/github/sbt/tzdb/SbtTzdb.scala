@@ -51,6 +51,12 @@ object TzdbPlugin extends AutoPlugin {
     val tzdbPlatform: SettingKey[Platform]      = settingKey[Platform](
       "The generated code is platform specific. Specify what is the target platform."
     )
+    val tzdbWasmSupport: SettingKey[Boolean]    = settingKey[Boolean](
+      "Scala.js only. Also generate a portable copy of the data (no JS interop), which the " +
+        "provider selects at link time on WebAssembly targets without a JavaScript host. " +
+        "Other targets link the same code and data as without this setting. Needs Scala.js " +
+        ">= 1.21 and Scala 2.12, 2.13 or 3.8+ (`LinkingInfo.linkTimeIf` on `moduleKind`)."
+    )
     val tzdbLocalDir: SettingKey[Option[JFile]] = settingKey[Option[JFile]](
       "An already-unpacked IANA tzdb directory to generate from. When set, nothing is " +
         "downloaded and `dbVersion` is unused. For builds that have no network access."
@@ -64,6 +70,7 @@ object TzdbPlugin extends AutoPlugin {
     dbVersion := LatestVersion,
     includeTTBP := false,
     tzdbPlatform := Platform.Js,
+    tzdbWasmSupport := false,
     tzdbLocalDir := None
   )
   override val projectSettings    =
@@ -87,18 +94,20 @@ object TzdbPlugin extends AutoPlugin {
         val cachedActionFunction: Set[JFile] => Set[JFile] = FileFunction.cached(
           cacheLocation,
           inStyle = FilesInfo.hash
-        ) { _ =>
-          tzdbCodeGenImpl(
-            sourceManaged = (Compile / sourceManaged).value,
-            resourcesManaged = (Compile / resourceManaged).value,
-            zonesFilter = zonesFilter.value,
-            dbVersion = dbVersion.value,
-            tzdbLocalDir = tzdbLocalDir.value,
-            includeTTBP = includeTTBP.value,
-            tzdbPlatform = tzdbPlatform.value,
-            dialect = dialect,
-            log = log
-          )
+        ) {
+          _ =>
+            tzdbCodeGenImpl(
+              sourceManaged = (Compile / sourceManaged).value,
+              resourcesManaged = (Compile / resourceManaged).value,
+              zonesFilter = zonesFilter.value,
+              dbVersion = dbVersion.value,
+              tzdbLocalDir = tzdbLocalDir.value,
+              includeTTBP = includeTTBP.value,
+              tzdbPlatform = tzdbPlatform.value,
+              dialect = dialect,
+              tzdbWasmSupport = tzdbWasmSupport.value,
+              log = log
+            )
         }
         cachedActionFunction(Set((Compile / resourceManaged).value / "tzdb.tar.gz")).toSeq
       }
@@ -113,9 +122,14 @@ object TzdbPlugin extends AutoPlugin {
     includeTTBP:      Boolean,
     tzdbPlatform:     Platform,
     dialect:          Dialect,
-    log:              Logger
+    log:              Logger,
+    tzdbWasmSupport:  Boolean = false
   ): Set[JFile] = {
-    val sourceDir = s"${tzdbPlatform.name}/${dialect.name}"
+    // With Wasm support, the Scala.js provider holds both the JS-optimized data and a portable
+    // copy, and selects one at link time. Without it, the output is the plain JS one.
+    val withPortableData = tzdbWasmSupport && tzdbPlatform == Platform.Js
+    val platformDir      = if (withPortableData) "js-wasm" else tzdbPlatform.name
+    val sourceDir        = s"$platformDir/${dialect.name}"
 
     // A local directory REPLACES the download rather than seeding it: a build that asked
     // for local data and silently fetched instead would pass on a networked machine and
@@ -161,8 +175,25 @@ object TzdbPlugin extends AutoPlugin {
     val f =
       if (p.exists) IOTasks.tzDataSources(sourceManaged, includeTTBP).map(_._3)
       else
-        IOTasks.generateTZDataSources(sourceManaged, tzdbData, log, includeTTBP, zonesFilter)
+        IOTasks.generateTZDataSources(sourceManaged,
+                                      tzdbData,
+                                      log,
+                                      includeTTBP,
+                                      tzdbPlatform,
+                                      zonesFilter
+        )
 
-    (j ::: f).toSet
+    val portable =
+      if (!withPortableData) Nil
+      else if (p.exists) IOTasks.portableTzDataSources(sourceManaged, includeTTBP).map(_._3)
+      else
+        IOTasks.generatePortableTZDataSources(sourceManaged,
+                                              tzdbData,
+                                              log,
+                                              includeTTBP,
+                                              zonesFilter
+        )
+
+    (j ::: f ::: portable).toSet
   }
 }

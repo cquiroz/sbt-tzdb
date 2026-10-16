@@ -1,4 +1,3 @@
 > managedSources
-> checkNoJsInterop
 > +compile
 > run

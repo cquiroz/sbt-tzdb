@@ -43,15 +43,54 @@ object IOTasks {
     if (includeTTBP) List(pathsTTB, pathsJT) else List(pathsJT)
   }
 
+  /**
+    * The portable copy of the data for the Scala.js provider with Wasm support. It lives in a
+    * `portable` subpackage, next to the JS-optimized copy of [[tzDataSources]].
+    */
+  def portableTzDataSources(
+    base:        File,
+    includeTTBP: Boolean
+  ): List[(String, String, File)] = {
+    val dataPath = base / "tzdb"
+    val pathsJT  =
+      ("zonedb.java.portable", "java.time", dataPath / "tzdb_java_portable.scala")
+    val pathsTTB =
+      ("zonedb.threeten.portable", "org.threeten.bp", dataPath / "tzdb_threeten_portable.scala")
+    if (includeTTBP) List(pathsTTB, pathsJT) else List(pathsJT)
+  }
+
   def generateTZDataSources(
+    base:         File,
+    data:         File,
+    log:          Logger,
+    includeTTBP:  Boolean,
+    tzdbPlatform: TzdbPlugin.Platform,
+    zonesFilter:  String => Boolean
+  ): List[File] = {
+    val paths = tzDataSources(base, includeTTBP)
+    log.info(s"Generating tzdb from db at $data to $base")
+    paths.foreach(t => t._3.getParentFile().mkdirs())
+    paths.map { p =>
+      tzdbPlatform match {
+        case TzdbPlugin.Platform.Js =>
+          import kuyfi.TZDBCodeGenerator.OptimizedTreeGenerator.*
+          TZDBCodeGenerator.exportAll(data, p._3, p._1, p._2, zonesFilter)
+        case _                      =>
+          import kuyfi.TZDBCodeGenerator.PureTreeGenerator.*
+          TZDBCodeGenerator.exportAll(data, p._3, p._1, p._2, zonesFilter)
+      }
+    }
+  }
+
+  def generatePortableTZDataSources(
     base:        File,
     data:        File,
     log:         Logger,
     includeTTBP: Boolean,
     zonesFilter: String => Boolean
   ): List[File] = {
-    val paths = tzDataSources(base, includeTTBP)
-    log.info(s"Generating tzdb from db at $data to $base")
+    val paths = portableTzDataSources(base, includeTTBP)
+    log.info(s"Generating portable tzdb from db at $data to $base")
     paths.foreach(t => t._3.getParentFile().mkdirs())
     paths.map { p =>
       import kuyfi.TZDBCodeGenerator.PureTreeGenerator.*
