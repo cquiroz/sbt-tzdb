@@ -102,6 +102,17 @@ tzdbLocalDir := Some(file("/path/to/tzdata2024a"))
   build fails instead of quietly fetching, so a misconfigured path cannot pass on a
   networked machine and then fail in the sandbox it was meant for.
 
+* `tzdbWasmSupport`: Scala.js only, `false` by default. When `true`, the plugin also generates
+  a portable copy of the data (plain Scala, no JS interop). The provider selects it at link
+  time with `LinkingInfo.linkTimeIf`, only on WebAssembly targets without a JavaScript host
+  (the [scala-wasm](https://github.com/scala-wasm/scala-wasm) module kinds `MinimalWasmModule`
+  and `WasmComponent`). Every other target links the same JS-optimized data as before, and
+  the unused copy is not linked. Needs Scala.js 1.21+ and Scala 2.12, 2.13 or 3.8+.
+
+```scala
+tzdbWasmSupport := true
+```
+
 ## Warning
 
 * This is still an experimental plugin, use with care

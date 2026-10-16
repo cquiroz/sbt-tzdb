@@ -1,0 +1,9 @@
+> managedSources
+> checkPortableData
+> +compile
+> checkJsLink
+> run
+> ++3.9.0
+> checkPortableData
+> checkJsLink
+> run

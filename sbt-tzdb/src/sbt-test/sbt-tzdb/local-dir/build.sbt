@@ -17,6 +17,8 @@ tzdbLocalDir := Some((ThisBuild / baseDirectory).value / "tzdb-data")
 // evidence that nothing was fetched.
 dbVersion := TzdbPlugin.Version("0000z")
 
+scalaJSUseMainModuleInitializer := true
+
 // doesn't work to do this `inThisBuild`
 lazy val commonSettings = Seq(
   Compile / doc / scalacOptions --= Seq(
