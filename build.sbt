@@ -52,7 +52,7 @@ lazy val sbt_tzdb = project
       case _      => sbt2
     }),
     libraryDependencies ++= Seq(
-      "io.github.cquiroz" %% "kuyfi"            % "1.7.0",
+      "io.github.cquiroz" %% "kuyfi"            % "1.8.0",
       "org.apache.commons" % "commons-compress" % "1.28.0"
     ),
     // Built on a modern JDK, but consumers may still be on older ones.
